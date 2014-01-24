@@ -58,3 +58,12 @@ transferring the same code multiple times:
 <script src="/bundle/common.js"></script>
 <script src="/bundle/y.js"></script>
 ```
+
+to verify this works from node you can do:
+
+```
+$ cat bundle/common.js <(echo ';') bundle/x.js | node
+55500
+$ cat bundle/common.js <(echo ';') bundle/y.js | node
+333
+```
