@@ -1,34 +1,35 @@
-# browser-factor 
+# factor-bundle
 
-factor out 
+factor [browser-pack](https://npmjs.org/package/browser-pack) bundles into a
+common bundle and entry-specific bundles
 
 # example
 
 x.js:
 
-```
+``` js
 var z = require('./z.js');
 console.log(z(5) * 100);
 ```
 
 y.js:
 
-```
+``` js
 var z = require('./z.js');
 console.log(z(2) + 111);
 ```
 
 z.js:
 
-```
+``` js
 module.exports = function (n) { return n * 111 }
 ```
 
 now pipe some [module-deps](https://npmjs.org/package/module-deps) json into
-`browser-factor`:
+`factor-bundle`:
 
-```
-$ module-deps x.js y.js | browser-factor \
+``` sh
+$ module-deps x.js y.js | factor-bundle \
   x.js -o bundle/x.js \
   y.js -o bundle/y.js \
   > bundle/common.js
@@ -36,9 +37,9 @@ $ module-deps x.js y.js | browser-factor \
 
 or factor out an existing bundle already compiled by browserify:
 
-```
+``` sh
 $ browserify x.js y.js > bundle.js
-$ browser-unpack < bundle.jsj | browser-factor \
+$ browser-unpack < bundle.jsj | factor-bundle \
   x.js -o bundle/x.js \
   y.js -o bundle/y.js \
   > bundle/common.js
