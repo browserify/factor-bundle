@@ -1,2 +1,3 @@
 var z = require('./z.js');
-console.log(z(5) * 100);
+var w = require('./w.js');
+console.log(z(5) * w(2));
