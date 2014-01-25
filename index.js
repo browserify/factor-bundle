@@ -35,8 +35,9 @@ function Factor (files, opts) {
     this.basedir = opts.basedir || process.cwd();
     
     this._streams = {};
-    this._deps = {};
+    this._groups = {};
     this._buffered = {};
+    
     this._files = files.reduce(function (acc, file) {
         acc[path.resolve(self.basedir, file)] = true;
         return acc;
@@ -50,35 +51,43 @@ Factor.prototype._transform = function (row, enc, next) {
     if (this._files[row.id]) {
         var s = this._streams[row.id];
         if (!s) s = this._makeStream(row);
-        
-        Object.keys(row.deps || {}).forEach(function (key) {
-            var v = row.deps[key];
-            if (!self._deps[v]) self._deps[v] = [];
-            self._deps[v].push(row.id);
-        });
-        
         s.push(row);
+        
+        addGroups(row.id);
     }
-    else if (this._deps[row.id]) {
+    else if (this._groups[row.id]) {
         this._buffered[row.id] = row;
+        this._groups[row.id].forEach(addGroups);
     }
     else this.push(row);
     
     next();
+    
+    function addGroups (gid) {
+        Object.keys(row.deps || {}).forEach(function (key) {
+            var file = row.deps[key];
+            var g = self._groups[file];
+            if (!g) g = self._groups[file] = [];
+            g.push(gid);
+        });
+    }
 };
 
 Factor.prototype._flush = function () {
     var self = this;
     
-    Object.keys(self._buffered).forEach(function (key) {
-        var row = self._buffered[key];
+    Object.keys(this._buffered).forEach(function (file) {
+        var row = self._buffered[file];
+        var groups = self._groups[file];
         
-        if (self._deps[key].length > self._threshold) {
+        if (groups.length > self._threshold) {
             self.push(row);
         }
-        else self._deps[key].forEach(function (id) {
-            self._streams[id].push(row);
-        });
+        else {
+            groups.forEach(function (id) {
+                self._streams[id].push(row);
+            });
+        }
     });
     
     Object.keys(self._streams).forEach(function (key) {
