@@ -74,3 +74,17 @@ $ cat bundle/common.js <(echo ';') bundle/x.js | node
 $ cat bundle/common.js <(echo ';') bundle/y.js | node
 333
 ```
+
+# usage
+
+```
+usage: factor-bundle [ x.js -o bundle/x.js ... ] > bundle/common.js
+
+Read `module-deps` json output from stdin, factoring each entry file out into
+the corresponding output file (-o).
+
+If there is a trailing unpaired `-o`, that file will be used for the common
+bundle output. Otherwise, the final bundle is written to stdout.
+
+```
+
