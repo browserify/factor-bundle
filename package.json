@@ -1,0 +1,40 @@
+{
+  "name": "factor-bundle",
+  "version": "0.0.0",
+  "description": "factor browser-pack bundles into common shared bundles",
+  "main": "index.js",
+  "bin": "bin/cmd.js",
+  "dependencies": {
+    "JSONStream": "~0.7.1",
+    "browser-pack": "~2.0.1",
+    "inherits": "~2.0.1",
+    "minimist": "~0.0.5",
+    "stream-combiner": "~0.0.4"
+  },
+  "devDependencies": {
+    "tape": "~2.3.2",
+    "module-deps": "~1.3.0",
+    "browser-unpack": "~0.0.0",
+    "through": "~2.3.4"
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/factor-bundle.git"
+  },
+  "homepage": "https://github.com/substack/factor-bundle",
+  "keywords": [
+    "browserify",
+    "browserify-tool",
+    "bundle",
+    "browser-pack"
+  ],
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "license": "MIT"
+}
