@@ -46,7 +46,7 @@ or factor out an existing bundle already compiled by browserify:
 
 ``` sh
 $ browserify x.js y.js > bundle.js
-$ browser-unpack < bundle.jsj | factor-bundle \
+$ browser-unpack < bundle.js | factor-bundle \
   x.js -o bundle/x.js \
   y.js -o bundle/y.js \
   > bundle/common.js
