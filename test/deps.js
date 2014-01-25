@@ -29,7 +29,7 @@ var expected = {
 };
 
 test('trust but verify', function (t) {
-    t.plan(3);
+    t.plan(5);
     var packs = {
         common: pack({ raw: true }),
         'x.js': pack({ raw: true }),
@@ -54,7 +54,17 @@ test('trust but verify', function (t) {
     
     function done () {
         if (--pending !== 0) return;
-        console.log(sources);
+        var srcx = 'require=' + sources.common
+            + ';require=' + sources['x.js']
+        ;
+        function logx (msg) { t.equal(msg, 55500) }
+        vm.runInNewContext(srcx, { console: { log: logx } });
+        
+        var srcy = 'require=' + sources.common
+            + ';require=' + sources['y.js']
+        ;
+        function logy (msg) { t.equal(msg, 333) }
+        vm.runInNewContext(srcy, { console: { log: logy } });
     }
     
     var rows = [];

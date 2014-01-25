@@ -69,9 +69,9 @@ transferring the same code multiple times:
 to verify this works from node you can do:
 
 ```
-$ cat bundle/common.js <(echo ';') bundle/x.js | node
+$ cat bundle/common.js bundle/x.js | node
 55500
-$ cat bundle/common.js <(echo ';') bundle/y.js | node
+$ cat bundle/common.js bundle/y.js | node
 333
 ```
 
