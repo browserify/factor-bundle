@@ -73,7 +73,7 @@ Factor.prototype._flush = function () {
     Object.keys(self._buffered).forEach(function (key) {
         var row = self._buffered[key];
         
-        if (self._deps[key].length > 1) {
+        if (self._deps[key].length > self._threshold) {
             self.push(row);
         }
         else self._deps[key].forEach(function (id) {

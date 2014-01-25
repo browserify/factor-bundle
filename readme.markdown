@@ -88,3 +88,44 @@ bundle output. Otherwise, the final bundle is written to stdout.
 
 ```
 
+# methods
+
+``` js
+var factor = require('factor-bundle')
+```
+
+## var fr = factor(files, opts={})
+
+Return a transform stream `tr` that factors the array of entry path strings
+`files` out into bundle files. The input format that `fr` expects is described
+in the [module-deps package](https://npmjs.org/package/module-deps).
+
+The output format for `fr` and each of the `fr` sub-streams given by each
+`'stream'` event is also in the
+[module-deps](https://npmjs.org/package/module-deps) format.
+
+The files held in common among `> opts.threshold` (default: 1) bundles will be
+output on the `fr` stream itself. The entry-specific bundles are diverted into
+each `'stream'` event's output.
+
+# events
+
+## fr.on('stream', function (stream) {})
+
+Each entry file emits a `'stream'` event containing all of the entry-specific
+rows that are only used by that entry file (when `opts.threshold === 1`, the
+default).
+
+The entry file name is available as `stream.file`.
+
+# install
+
+With [npm](https://npmjs.org) do:
+
+```
+npm install factor-bundle
+```
+
+# license
+
+MIT
