@@ -3,6 +3,8 @@
 factor [browser-pack](https://npmjs.org/package/browser-pack) bundles into a
 common bundle and entry-specific bundles
 
+[![build status](https://secure.travis-ci.org/substack/factor-bundle.png)](http://travis-ci.org/substack/factor-bundle)
+
 # example
 
 x.js:
