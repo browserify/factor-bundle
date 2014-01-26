@@ -8,29 +8,29 @@ var pack = require('browser-pack');
 var concat = require('concat-stream');
 var vm = require('vm');
 
-var files = [ 'x.js', 'y.js' ].map(function (file) {
-    return path.join(__dirname, 'files', file);
-});
-var expected = {
-    common: [ read('z.js') ],
-    'x.js': [
-        read('x.js', {
-            entry: true,
-            deps: { './z.js': norm('z.js'), './w.js': norm('w.js') }
-        }),
-        read('w.js')
-    ],
-    'y.js': [
-        read('y.js', {
-           entry: true,
-           deps: { './z.js': norm('z.js') }
-        })
-    ]
-};
-
 test('more complicated dependencies', function (t) {
     //t.plan(5);
     t.plan(2);
+    var files = [ 'x.js', 'y.js' ].map(function (file) {
+      return path.join(__dirname, 'files', file);
+    });
+
+    var expected = {
+        common: [ read('z.js') ],
+        'x.js': [
+            read('x.js', {
+                entry: true,
+                deps: { './z.js': norm('z.js'), './w.js': norm('w.js') }
+            }),
+            read('w.js')
+        ],
+        'y.js': [
+            read('y.js', {
+               entry: true,
+               deps: { './z.js': norm('z.js') }
+            })
+        ]
+    };
     
     var packs = {
         common: pack({ raw: true }),
@@ -81,6 +81,70 @@ test('more complicated dependencies', function (t) {
     mdeps(files).pipe(fr)
     fr.pipe(rowsOf(function (rows) {
         //t.deepEqual(rows, expected.common);
+    }));
+    fr.pipe(packs.common);
+});
+
+test('same module included twice', function (t) {
+    //t.plan(5);
+    t.plan(3);
+
+    var files = [ 't.js' ].map(function (file) {
+        return path.join(__dirname, 'files', file);
+    });
+
+    var expected = {
+        common: [],
+        't.js': [
+            read('t.js', {
+                entry: true,
+                deps: { './a.js': norm('a.js'), './w.js': norm('w.js') }
+            }),
+            read('a.js'),
+            read('w.js', {
+                deps: { './a.js': norm('a.js') }
+            })
+        ]
+    };
+
+    var packs = {
+        common: pack({ raw: true }),
+        't.js': pack({ raw: true })
+    };
+
+    var pending = 2;
+
+    var sources = {};
+    packs.common.pipe(concat(function (src) {
+        sources.common = src;
+        done();
+    }));
+    packs['t.js'].pipe(concat(function (src) {
+        sources['t.js'] = src;
+        done();
+    }));
+
+    function done () {
+        if (--pending !== 0) return;
+        var srct = 'require=' + sources.common
+            + ';require=' + sources['t.js']
+        ;
+        function logx (msg) { t.equal(msg, 300) }
+        vm.runInNewContext(srct, { console: { log: logx } });
+    }
+
+    var rows = [];
+    var fr = factor(files, { objectMode: true, raw: true });
+    fr.on('stream', function (bundle) {
+        var name = path.basename(bundle.file);
+        bundle.pipe(rowsOf(function (rows) {
+            t.deepEqual(rows, expected[name]);
+        }));
+        bundle.pipe(packs[name]);
+    });
+    mdeps(files).pipe(fr)
+    fr.pipe(rowsOf(function (rows) {
+        t.deepEqual(rows, expected.common);
     }));
     fr.pipe(packs.common);
 });
