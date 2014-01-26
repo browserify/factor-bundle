@@ -4,6 +4,7 @@ var inherits = require('inherits');
 var path = require('path');
 var JSONStream = require('JSONStream');
 var combine = require('stream-combiner');
+var nub = require('nub');
 
 module.exports = function (files, opts) {
     if (!opts) opts = {};
@@ -78,7 +79,7 @@ Factor.prototype._flush = function () {
     
     Object.keys(this._buffered).forEach(function (file) {
         var row = self._buffered[file];
-        var groups = self._groups[file];
+        var groups = nub(self._groups[file]);
         
         if (groups.length > self._threshold) {
             self.push(row);
