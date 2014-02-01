@@ -9,29 +9,30 @@ var concat = require('concat-stream');
 var vm = require('vm');
 
 test('more complicated dependencies', function (t) {
-    //t.plan(5);
-    t.plan(2);
+    t.plan(5);
     var files = [ 'x.js', 'y.js' ].map(function (file) {
       return path.join(__dirname, 'files', file);
     });
 
     var expected = {
-        common: [ read('z.js') ],
+        common: [ read('z.js'), read('a.js') ],
         'x.js': [
             read('x.js', {
                 entry: true,
                 deps: { './z.js': norm('z.js'), './w.js': norm('w.js') }
             }),
-            read('w.js')
+            read('w.js', {
+                deps: { './a.js': norm('a.js') }
+            })
         ],
         'y.js': [
             read('y.js', {
-               entry: true,
-               deps: { './z.js': norm('z.js') }
+                entry: true,
+                deps: { './z.js': norm('z.js'), './a.js': norm('a.js') }
             })
         ]
     };
-    
+
     var packs = {
         common: pack({ raw: true }),
         'x.js': pack({ raw: true }),
@@ -74,13 +75,13 @@ test('more complicated dependencies', function (t) {
     fr.on('stream', function (bundle) {
         var name = path.basename(bundle.file);
         bundle.pipe(rowsOf(function (rows) {
-            //t.deepEqual(rows, expected[name]);
+            t.deepEqual(rows, expected[name]);
         }));
         bundle.pipe(packs[name]);
     });
     mdeps(files).pipe(fr)
     fr.pipe(rowsOf(function (rows) {
-        //t.deepEqual(rows, expected.common);
+        t.deepEqual(rows, expected.common);
     }));
     fr.pipe(packs.common);
 });
