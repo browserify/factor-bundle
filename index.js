@@ -44,7 +44,11 @@ function Factor (files, opts) {
         return acc;
     }, {});
     
-    this._threshold = opts.threshold === undefined ? 1 : opts.threshold;
+    this._thresholdVal = typeof opts.threshold === "number" ? opts.threshold : 1;
+    this._defaultThreshold = function(row, group) {
+        return group.length > this._thresholdVal;
+    };
+    this._threshold = typeof opts.threshold === "function" ? opts.threshold : this._defaultThreshold
 }
 
 Factor.prototype._transform = function (row, enc, next) {
@@ -81,7 +85,7 @@ Factor.prototype._flush = function () {
         var row = self._buffered[file];
         var groups = nub(self._groups[file]);
         
-        if (groups.length > self._threshold) {
+        if (self._threshold(row, groups)) {
             self.push(row);
         }
         else {
