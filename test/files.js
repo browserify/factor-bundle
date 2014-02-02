@@ -100,10 +100,10 @@ test('same module included twice', function (t) {
                 entry: true,
                 deps: { './a.js': norm('a.js'), './w.js': norm('w.js') }
             }),
-            read('a.js'),
             read('w.js', {
                 deps: { './a.js': norm('a.js') }
-            })
+            }),
+            read('a.js')
         ]
     };
 
@@ -164,10 +164,10 @@ test('threshold function reorganizes bundles', function (t) {
                 entry: true,
                 deps: { './a.js': norm('a.js'), './w.js': norm('w.js') }
             }),
-            read('a.js'),
             read('w.js', {
                 deps: { './a.js': norm('a.js') }
-            })
+            }),
+            read('a.js')
         ],
         'y.js': [
             read('y.js', {
@@ -247,10 +247,10 @@ test('if dependent is in common, so is dependee', function (t) {
 
     var expected = {
         common: [
-            read('a.js'),
             read('w.js', {
                 deps: { './a.js': norm('a.js') }
-            })
+            }),
+            read('a.js')
         ],
         't.js': [
             read('t.js', {
