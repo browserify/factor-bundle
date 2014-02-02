@@ -239,10 +239,78 @@ test('threshold function reorganizes bundles', function (t) {
     fr.pipe(packs.common);
 });
 
+test('if dependent is in common, so is dependee', function (t) {
+    t.plan(3);
+    var files = [ 't.js' ].map(function (file) {
+      return path.join(__dirname, 'files', file);
+    });
+
+    var expected = {
+        common: [
+            read('a.js'),
+            read('w.js', {
+                deps: { './a.js': norm('a.js') }
+            })
+        ],
+        't.js': [
+            read('t.js', {
+                entry: true,
+                deps: { './a.js': norm('a.js'), './w.js': norm('w.js') }
+            })
+        ]
+    };
+
+    var packs = {
+        common: pack({ raw: true }),
+        't.js': pack({ raw: true }),
+    };
+
+    var pending = 2;
+
+    var sources = {};
+    packs.common.pipe(concat(function (src) {
+        sources.common = src;
+        done();
+    }));
+    packs['t.js'].pipe(concat(function (src) {
+        sources['t.js'] = src;
+        done();
+    }));
+
+    function done () {
+        if (--pending !== 0) return;
+        var srct = 'require=' + sources.common
+            + ';require=' + sources['t.js']
+        ;
+        function logt (msg) { t.equal(msg, 300) }
+        vm.runInNewContext(srct, { console: { log: logt } });
+    }
+
+    var rows = [];
+    var fr = factor(files, { objectMode: true, raw: true, threshold: function(row, groups) {
+        if (/.*[w]\.js$/.test(row.id)) {
+            return true;
+        };
+        return this._defaultThreshold(row, groups);
+    }});
+    fr.on('stream', function (bundle) {
+        var name = path.basename(bundle.file);
+        bundle.pipe(rowsOf(function (rows) {
+            t.deepEqual(rows, expected[name]);
+        }));
+        bundle.pipe(packs[name]);
+    });
+    mdeps(files).pipe(fr)
+    fr.pipe(rowsOf(function (rows) {
+        t.deepEqual(rows, expected.common);
+    }));
+    fr.pipe(packs.common);
+});
+
 function rowsOf (cb) {
     var rows = [];
     return through(write, end);
-    
+
     function write (row) { rows.push(row) }
     function end () { cb(rows) }
 }

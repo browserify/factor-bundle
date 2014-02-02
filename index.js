@@ -81,11 +81,15 @@ Factor.prototype._transform = function (row, enc, next) {
 Factor.prototype._flush = function () {
     var self = this;
     
+    var ensureCommon = {};
     Object.keys(this._buffered).forEach(function (file) {
         var row = self._buffered[file];
         var groups = nub(self._groups[file]);
         
-        if (self._threshold(row, groups)) {
+        if (ensureCommon[file] || self._threshold(row, groups)) {
+            Object.keys(row.deps).forEach(function(k) {
+                ensureCommon[row.deps[k]] = true;
+            });
             self.push(row);
         }
         else {
