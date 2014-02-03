@@ -9,7 +9,7 @@ var concat = require('concat-stream');
 var vm = require('vm');
 
 var files = [ 'x.js', 'y.js' ].map(function (file) {
-    return path.join(__dirname, '../example', file);
+    return path.join(__dirname, 'deps', file);
 });
 var expected = {
     common: [ read('z.js') ],
@@ -101,5 +101,5 @@ function read (name, ref) {
 }
 
 function norm (file) {
-    return path.normalize(__dirname + '/../example/' + file);
+    return path.normalize(__dirname + '/deps/' + file);
 }
