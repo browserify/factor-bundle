@@ -108,7 +108,8 @@ The output format for `fr` and each of the `fr` sub-streams given by each
 
 The files held in common among `> opts.threshold` (default: 1) bundles will be
 output on the `fr` stream itself. The entry-specific bundles are diverted into
-each `'stream'` event's output.
+each `'stream'` event's output. `opts.threshold` can be a nubmer or a function
+`opts.threshold(row)` for each row object that returns a number.
 
 # events
 
