@@ -45,11 +45,16 @@ function Factor (files, opts) {
         return acc;
     }, {});
     
-    this._thresholdVal = typeof opts.threshold === "number" ? opts.threshold : 1;
+    this._thresholdVal = typeof opts.threshold === "number"
+        ? opts.threshold : 1
+    ;
     this._defaultThreshold = function(row, group) {
         return group.length > this._thresholdVal;
     };
-    this._threshold = typeof opts.threshold === "function" ? opts.threshold : this._defaultThreshold
+    this._threshold = typeof opts.threshold === "function"
+        ? opts.threshold
+        : this._defaultThreshold
+    ;
 }
 
 Factor.prototype._transform = function (row, enc, next) {
@@ -86,7 +91,7 @@ Factor.prototype._flush = function () {
     Object.keys(self._buffered).forEach(function (file) {
         Object.keys(self._buffered[file].deps).forEach(function (dep) {
             deps.push([self._buffered[file].id, self._buffered[file].deps[dep]])
-        })
+        });
     });
     var order = toposort.array(Object.keys(self._buffered), deps);
     var ensureCommon = {};
