@@ -11,7 +11,9 @@
     "minimist": "~0.0.5",
     "stream-combiner": "~0.0.4",
     "nub": "0.0.0",
-    "toposort": "~0.2.10"
+    "toposort": "~0.2.10",
+    "deps-topo-sort": "~0.2.0",
+    "reversepoint": "~0.2.0"
   },
   "devDependencies": {
     "tape": "~2.3.2",
