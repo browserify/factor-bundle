@@ -11,18 +11,21 @@ var reverse = require('reversepoint');
 module.exports = function (files, opts) {
     if (!opts) opts = {};
 
-    var fr = new Factor(files, opts),
-        parse, dup;
-
+    var fr = new Factor(files, opts);
+    var parse, dup;
+    
     if (opts.objectMode) {
-      dup = combine(depsTopoSort(), reverse(), fr);
-    } else {
-      parse = JSONStream.parse([true]);
-      dup = opts.raw
-        ? combine(parse, depsTopoSort(), reverse(), fr)
-        : combine(parse, depsTopoSort(), reverse(), fr, JSONStream.stringify());
-
-      parse.on('error', function (err) { dup.emit('error', err) });
+        dup = combine(depsTopoSort(), reverse(), fr);
+    }
+    else {
+        parse = JSONStream.parse([true]);
+        dup = opts.raw
+            ? combine(parse, depsTopoSort(), reverse(), fr)
+            : combine(
+                parse, depsTopoSort(), reverse(), fr, JSONStream.stringify()
+            )
+        ;
+        parse.on('error', function (err) { dup.emit('error', err) });
     }
     
     fr.on('error', function (err) { dup.emit('error', err) });
@@ -71,7 +74,8 @@ Factor.prototype._transform = function (row, enc, next) {
         s.push(row);
         
         addGroups(row.id);
-    } else {
+    }
+    else {
         this._buffered[row.id] = row;
         if (this._groups[row.id]) {
             this._groups[row.id].forEach(addGroups);
