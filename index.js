@@ -49,6 +49,7 @@ function Factor (files, opts) {
     this._groups = {};
     this._buffered = {};
     
+    this._ensureCommon = {};
     this._files = files.reduce(function (acc, file) {
         acc[path.resolve(self.basedir, file)] = true;
         return acc;
@@ -58,7 +59,7 @@ function Factor (files, opts) {
         ? opts.threshold : 1
     ;
     this._defaultThreshold = function(row, group) {
-        return group.length > this._thresholdVal;
+        return group.length > this._thresholdVal || group.length === 0;
     };
     this._threshold = typeof opts.threshold === "function"
         ? opts.threshold
@@ -68,18 +69,25 @@ function Factor (files, opts) {
 
 Factor.prototype._transform = function (row, enc, next) {
     var self = this;
-    if (this._files[row.id]) {
-        var s = this._streams[row.id];
-        if (!s) s = this._makeStream(row);
-        s.push(row);
-        
-        addGroups(row.id);
+    var groups = nub(self._groups[row.id] || []);
+
+    if (self._files[row.id]) {
+        var s = self._streams[row.id];
+        if (!s) s = self._makeStream(row);
+        groups.push(row.id);
+    }
+    groups.forEach(addGroups);
+
+    if (self._ensureCommon[row.id] || self._threshold(row, groups)) {
+        Object.keys(row.deps).forEach(function(k) {
+            self._ensureCommon[row.deps[k]] = true;
+        });
+        self.push(row);
     }
     else {
-        this._buffered[row.id] = row;
-        if (this._groups[row.id]) {
-            this._groups[row.id].forEach(addGroups);
-        }
+        groups.forEach(function (id) {
+            self._streams[id].push(row);
+        });
     }
     
     next();
@@ -96,25 +104,6 @@ Factor.prototype._transform = function (row, enc, next) {
 
 Factor.prototype._flush = function () {
     var self = this;
-    
-    var ensureCommon = {};
-    Object.keys(self._buffered).forEach(function (file) {
-        var row = self._buffered[file];
-        
-        var groups = nub(self._groups[file] || []);
-        if (groups.length === 0) ensureCommon[file] = true;
-        if (ensureCommon[file] || self._threshold(row, groups)) {
-            Object.keys(row.deps).forEach(function(k) {
-                ensureCommon[row.deps[k]] = true;
-            });
-            self.push(row);
-        }
-        else {
-            groups.forEach(function (id) {
-                self._streams[id].push(row);
-            });
-        }
-    });
     
     Object.keys(self._streams).forEach(function (key) {
         self._streams[key].push(null);
