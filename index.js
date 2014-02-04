@@ -5,7 +5,6 @@ var path = require('path');
 var JSONStream = require('JSONStream');
 var combine = require('stream-combiner');
 var nub = require('nub');
-var toposort = require('toposort');
 var depsTopoSort = require('deps-topo-sort');
 var reverse = require('reversepoint');
 
@@ -94,15 +93,8 @@ Factor.prototype._transform = function (row, enc, next) {
 Factor.prototype._flush = function () {
     var self = this;
     
-    var deps = [];
-    Object.keys(self._buffered).forEach(function (file) {
-        Object.keys(self._buffered[file].deps).forEach(function (dep) {
-            deps.push([self._buffered[file].id, self._buffered[file].deps[dep]])
-        });
-    });
-    var order = toposort.array(Object.keys(self._buffered), deps);
     var ensureCommon = {};
-    order.forEach(function (file) {
+    Object.keys(self._buffered).forEach(function (file) {
         var row = self._buffered[file];
         
         var groups = nub(self._groups[file] || []);
