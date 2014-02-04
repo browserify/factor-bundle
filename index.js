@@ -65,12 +65,12 @@ Factor.prototype._transform = function (row, enc, next) {
         s.push(row);
         
         addGroups(row.id);
-    }
-    else if (this._groups[row.id]) {
+    } else {
         this._buffered[row.id] = row;
-        this._groups[row.id].forEach(addGroups);
+        if (this._groups[row.id]) {
+            this._groups[row.id].forEach(addGroups);
+        }
     }
-    else this.push(row);
     
     next();
     
@@ -97,8 +97,9 @@ Factor.prototype._flush = function () {
     var ensureCommon = {};
     order.forEach(function (file) {
         var row = self._buffered[file];
-        var groups = nub(self._groups[file]);
         
+        var groups = nub(self._groups[file] || []);
+        if (groups.length === 0) ensureCommon[file] = true;
         if (ensureCommon[file] || self._threshold(row, groups)) {
             Object.keys(row.deps).forEach(function(k) {
                 ensureCommon[row.deps[k]] = true;
