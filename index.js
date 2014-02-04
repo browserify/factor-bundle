@@ -5,20 +5,26 @@ var path = require('path');
 var JSONStream = require('JSONStream');
 var combine = require('stream-combiner');
 var nub = require('nub');
-var toposort = require('toposort');
+var depsTopoSort = require('deps-topo-sort');
+var reverse = require('reversepoint');
 
 module.exports = function (files, opts) {
     if (!opts) opts = {};
-    if (opts.objectMode) return new Factor(files, opts);
+
+    var fr = new Factor(files, opts),
+        parse, dup;
+
+    if (opts.objectMode) {
+      dup = combine(depsTopoSort(), reverse(), fr);
+    } else {
+      parse = JSONStream.parse([true]);
+      dup = opts.raw
+        ? combine(parse, depsTopoSort(), reverse(), fr)
+        : combine(parse, depsTopoSort(), reverse(), fr, JSONStream.stringify());
+
+      parse.on('error', function (err) { dup.emit('error', err) });
+    }
     
-    var fr = new Factor(files, opts);
-    var parse = JSONStream.parse([true]);
-    var dup = opts.raw
-        ? combine(parse, fr)
-        : combine(parse, fr, JSONStream.stringify())
-    ;
-    
-    parse.on('error', function (err) { dup.emit('error', err) });
     fr.on('error', function (err) { dup.emit('error', err) });
     fr.on('stream', function (s) {
         if (opts.raw) dup.emit('stream', s)
@@ -87,15 +93,8 @@ Factor.prototype._transform = function (row, enc, next) {
 Factor.prototype._flush = function () {
     var self = this;
     
-    var deps = [];
-    Object.keys(self._buffered).forEach(function (file) {
-        Object.keys(self._buffered[file].deps).forEach(function (dep) {
-            deps.push([self._buffered[file].id, self._buffered[file].deps[dep]])
-        });
-    });
-    var order = toposort.array(Object.keys(self._buffered), deps);
     var ensureCommon = {};
-    order.forEach(function (file) {
+    Object.keys(self._buffered).forEach(function (file) {
         var row = self._buffered[file];
         
         var groups = nub(self._groups[file] || []);
