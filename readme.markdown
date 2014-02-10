@@ -139,7 +139,7 @@ an array of bundles which depend on the row. If the threshold function returns
 false, the row (but not its dependencies) will go to each bundle in `groups`.
 For example:
 
-```
+``` js
 factor(files, {threshold: function(row, groups) {
     if (/.*a\.js$/.test(row.id)) return false;
     if (/.*[z]\.js$/.test(row.id)) return true;
