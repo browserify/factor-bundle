@@ -55,10 +55,25 @@ module.exports = function f (b, opts) {
         var s = createStream(files, opts);
         s.on('stream', function (bundle) {
             var ws = fs.createWriteStream(fileMap[bundle.file]);
+            var rmap = {}, rindex = 5000;
             bundle.pipe(through(function (row) {
+                if (/^\//.test(row.id)) {
+                    if (rmap[row.id]) {
+                        row.id = rmap[row.id];
+                    }
+                    else {
+                        rindex ++;
+                        rmap[row.id] = rindex;
+                        row.id = rindex;
+                    }
+                }
                 Object.keys(row.deps).forEach(function (key) {
                     var k = row.deps[key];
                     if (intMap[k]) row.deps[key] = intMap[k];
+                    else if (/^\//.test(k)) {
+                        if (!rmap[k]) rmap[k] = ++ rindex;
+                        row.deps[key] = rmap[k];
+                    }
                 });
                 this.queue(row);
             })).pipe(pack({ raw: true })).pipe(wrap()).pipe(ws);
