@@ -34,8 +34,15 @@ w.js:
 module.exports = function (n) { return n * 50 }
 ```
 
-now pipe some [module-deps](https://npmjs.org/package/module-deps) json into
-`factor-bundle`:
+Now run factor-bundle as a plugin (new in browserify 3.28.0):
+
+``` sh
+browserify x.js y.js -p [ factor-bundle -o bundle/x.js -o bundle/y.js ] \
+  -o bundle/common.js
+```
+
+or you can pipe [module-deps](https://npmjs.org/package/module-deps) json
+directly into the `factor-bundle` command:
 
 ``` sh
 $ module-deps x.js y.js | factor-bundle \
@@ -54,9 +61,9 @@ $ browser-unpack < bundle.js | factor-bundle \
   > bundle/common.js
 ```
 
-and now you can have 2 pages, each with a different combination of script tags
-but with all the common modules factored out into a `common.js` to avoid
-transferring the same code multiple times:
+Whichever one of these 3 options, you take, you can now have 2 pages, each with
+a different combination of script tags but with all the common modules factored
+out into a `common.js` to avoid transferring the same code multiple times:
 
 ``` html
 <script src="/bundle/common.js"></script>
@@ -78,6 +85,22 @@ $ cat bundle/common.js bundle/y.js | node
 ```
 
 # usage
+
+You can use factor-bundle as a browserify plugin:
+
+```
+browserify -p [ factor-bundle OPTIONS ]
+
+where OPTIONS are:
+
+  -o  Output file that maps to a corresponding entry file at the same index
+ 
+  -e  Entry file to use, overriding the entry files listed in the original
+      bundle.
+
+```
+
+or you can use the command:
 
 ```
 usage: factor-bundle [ x.js -o bundle/x.js ... ] > bundle/common.js
