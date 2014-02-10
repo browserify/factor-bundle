@@ -12,7 +12,7 @@
     "stream-combiner": "~0.0.4",
     "nub": "0.0.0",
     "deps-topo-sort": "~0.2.0",
-    "reversepoint": "~0.2.0",
+    "reversepoint": "~0.2.0"
   },
   "devDependencies": {
     "tape": "~2.3.2",
