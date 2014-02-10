@@ -6,6 +6,7 @@ var factor = require('../');
 var minimist = require('minimist');
 var pack = require('browser-pack');
 var Transform = require('stream').Transform;
+var wrap = require('../lib/wrap.js');
 
 var argv = minimist(process.argv.slice(2));
 if (argv.h || argv.help || argv._.length === 0) {
@@ -29,17 +30,3 @@ fr.on('stream', function (bundle) {
     bundle.pipe(pack({ raw: true })).pipe(wrap()).pipe(ws);
 });
 process.stdin.pipe(fr).pipe(pack({ raw: true })).pipe(wrap()).pipe(output);
-
-function wrap () {
-    var tr = new Transform;
-    tr._transform = function (buf, enc, next) {
-        this.push(buf);
-        next();
-    };
-    tr._flush = function () {
-        this.push(';\n');
-        this.push(null);
-    };
-    tr.push('require=');
-    return tr;
-}

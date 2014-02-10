@@ -1,4 +1,5 @@
 var Transform = require('stream').Transform;
+var through = require('through');
 var Readable = require('stream').Readable;
 var inherits = require('inherits');
 var path = require('path');
@@ -7,10 +8,86 @@ var combine = require('stream-combiner');
 var nub = require('nub');
 var depsTopoSort = require('deps-topo-sort');
 var reverse = require('reversepoint');
+var fs = require('fs');
+var wrap = require('./lib/wrap.js');
+var pack = require('browser-pack');
 
-module.exports = function (files, opts) {
+module.exports = function f (b, opts) {
     if (!opts) opts = {};
+    if (typeof b === 'string' || Array.isArray(b)) {
+        return createStream(b, opts)
+    }
+    else if (b._pending) {
+        b.on('_ready', function () {
+            var s = f(b, opts)
+            s.on('data', function (buf) { tf.push(buf) });
+            tf._transform = function (buf, enc, next) {
+                s.write(buf);
+                next();
+            };
+            if (buffered) {
+                buffered = null;
+                s.write(buffered);
+            }
+            if (next) { next = null; next() }
+        });
+        var tf = new Transform({ objectMode: true });
+        var buffered, next;
+        tf._transform = function (buf, enc, next_) {
+            buffered = buf;
+            next = next_;
+        };
+        return tf;
+    }
+    else {
+        var files = [].concat(opts.entries).concat(opts.e)
+            .concat(opts._).filter(Boolean)
+        ;
+        if (files.length === 0) files = b._entries;
+        var cwd = b._basedir || process.cwd();
+        var fileMap = files.reduce(function (acc, x, ix) {
+            acc[path.resolve(cwd, x)] = opts.o[ix];
+            return acc;
+        }, {});
+        opts.objectMode = true;
+        opts.raw = true;
+        
+        var s = createStream(files, opts);
+        s.on('stream', function (bundle) {
+            var ws = fs.createWriteStream(fileMap[bundle.file]);
+            bundle.pipe(through(function (row) {
+                Object.keys(row.deps).forEach(function (key) {
+                    var k = row.deps[key];
+                    if (intMap[k]) row.deps[key] = intMap[k];
+                });
+                this.queue(row);
+            })).pipe(pack({ raw: true })).pipe(wrap()).pipe(ws);
+        });
+        
+        var intMap = {}, rowIndex = 0;
+        s.on('data', function (row) {
+            intMap[row.id] = ++ rowIndex;
+        });
+        
+        var deps = b.deps;
+        b.deps = function (opts) {
+            return deps.call(b, opts).pipe(s);
+        };
+        
+        var bundle = b.bundle;
+        b.bundle = function () {
+            var s = bundle.apply(this, arguments);
+            if (!s.unshift) s = new Readable().wrap(s);
+            s.unshift('require=');
+            return s;
+        };
+        return s;
+    }
+};
 
+function createStream (files, opts) {
+    if (!opts) opts = {};
+    
     var fr = new Factor(files, opts);
     var parse, dup;
     
@@ -34,7 +111,8 @@ module.exports = function (files, opts) {
         else dup.emit('stream', s.pipe(JSONStream.stringify()))
     });
     return dup;
-};
+}
+
 inherits(Factor, Transform);
 
 function Factor (files, opts) {
