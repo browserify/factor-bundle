@@ -7,12 +7,14 @@
   "dependencies": {
     "JSONStream": "~0.7.1",
     "browser-pack": "~2.0.1",
+    "browserify": "~3.28.0",
     "inherits": "~2.0.1",
     "minimist": "~0.0.5",
     "stream-combiner": "~0.0.4",
     "nub": "0.0.0",
     "deps-topo-sort": "~0.2.0",
-    "reversepoint": "~0.2.0"
+    "reversepoint": "~0.2.0",
+    "mkdirp": "~0.3.5"
   },
   "devDependencies": {
     "tape": "~2.3.2",
