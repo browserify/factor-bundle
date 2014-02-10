@@ -131,8 +131,21 @@ The output format for `fr` and each of the `fr` sub-streams given by each
 
 The files held in common among `> opts.threshold` (default: 1) bundles will be
 output on the `fr` stream itself. The entry-specific bundles are diverted into
-each `'stream'` event's output. `opts.threshold` can be a nubmer or a function
-`opts.threshold(row)` for each row object that returns a number.
+each `'stream'` event's output. `opts.threshold` can be a number or a function
+`opts.threshold(row, groups)` where `row` is a 
+[module-deps](https://github.com/substack/module-deps) object and `groups` is 
+an array of bundles which depend on the row. If the threshold function returns 
+`true`, that row and all its dependencies will go to the `common` bundle. If 
+false, the row (but not its dependencies) will go to each bundle in `groups`.
+For example:
+
+```
+factor(files, {threshold: function(row, groups) {
+    if (/.*a\.js$/.test(row.id)) return false;
+    if (/.*[z]\.js$/.test(row.id)) return true;
+    return this._defaultThreshold(row, groups);
+}});
+```
 
 # events
 
