@@ -11,6 +11,7 @@
     "minimist": "~0.0.5",
     "stream-combiner": "~0.0.4",
     "nub": "0.0.0",
+    "through": "~2.3.4",
     "deps-topo-sort": "~0.2.0",
     "reversepoint": "~0.2.0"
   },
