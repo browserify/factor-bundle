@@ -55,33 +55,33 @@ module.exports = function f (b, opts) {
         var s = createStream(files, opts);
         s.on('stream', function (bundle) {
             var ws = fs.createWriteStream(fileMap[bundle.file]);
-            var rmap = {}, rindex = 5000;
+            var rmap = {};
             bundle.pipe(through(function (row) {
                 if (/^\//.test(row.id)) {
                     if (rmap[row.id]) {
                         row.id = rmap[row.id];
                     }
                     else {
-                        rindex ++;
-                        rmap[row.id] = rindex;
-                        row.id = rindex;
+                        var rowHash = b._hash(row.id);
+                        rmap[row.id] = rowHash;
+                        row.id = rowHash;
                     }
                 }
                 Object.keys(row.deps).forEach(function (key) {
                     var k = row.deps[key];
-                    if (intMap[k]) row.deps[key] = intMap[k];
+                    if (hashMap[k]) row.deps[key] = hashMap[k];
                     else if (/^\//.test(k)) {
-                        if (!rmap[k]) rmap[k] = ++ rindex;
+                        if (!rmap[k]) rmap[k] = b._hash(row.id);
                         row.deps[key] = rmap[k];
                     }
                 });
                 this.queue(row);
             })).pipe(pack({ raw: true })).pipe(wrap()).pipe(ws);
         });
-        
-        var intMap = {}, rowIndex = 0;
+
+        var hashMap = {};
         s.on('data', function (row) {
-            intMap[row.id] = ++ rowIndex;
+            hashMap[row.id] = b.exports[row.id] = b._hash(row.id);
         });
         
         var deps = b.deps;
