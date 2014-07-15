@@ -6,21 +6,21 @@
   "bin": "bin/cmd.js",
   "dependencies": {
     "JSONStream": "~0.8.4",
-    "browser-pack": "~2.0.1",
+    "browser-pack": "^2.0.1",
     "deps-topo-sort": "~0.2.0",
-    "inherits": "~2.0.1",
+    "inherits": "^2.0.1",
     "minimist": "~0.2.0",
     "nub": "0.0.0",
     "reversepoint": "~0.2.0",
     "stream-combiner": "~0.2.1",
-    "through": "~2.3.4"
+    "through": "^2.3.4"
   },
   "devDependencies": {
-    "tape": "~2.13.0",
-    "module-deps": "~2.1.0",
+    "tape": "^2.13.0",
+    "module-deps": "^2.1.0",
     "browser-unpack": "~0.2.0",
-    "concat-stream": "~1.4.1",
-    "browserify": "~4.2.0",
+    "concat-stream": "^1.4.6",
+    "browserify": "^4.2.0",
     "mkdirp": "~0.5.0"
   },
   "scripts": {
