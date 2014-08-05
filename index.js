@@ -1,5 +1,5 @@
 var Transform = require('stream').Transform;
-var through = require('through');
+var through = require('through2');
 var Readable = require('stream').Readable;
 var inherits = require('inherits');
 var path = require('path');
@@ -9,95 +9,63 @@ var nub = require('nub');
 var depsTopoSort = require('deps-topo-sort');
 var reverse = require('reversepoint');
 var fs = require('fs');
-var wrap = require('./lib/wrap.js');
 var pack = require('browser-pack');
+var xtend = require('xtend');
 
 module.exports = function f (b, opts) {
     if (!opts) opts = {};
     if (typeof b === 'string' || Array.isArray(b)) {
         return createStream(b, opts)
     }
-    else if (b._pending) {
-        b.on('_ready', function () {
-            var s = f(b, opts)
-            s.on('data', function (buf) { tf.push(buf) });
-            tf._transform = function (buf, enc, next) {
-                s.write(buf);
-                next();
-            };
-            if (buffered) {
-                buffered = null;
-                s.write(buffered);
-            }
-            if (next) { next = null; next() }
-        });
-        var tf = new Transform({ objectMode: true });
-        var buffered, next;
-        tf._transform = function (buf, enc, next_) {
-            buffered = buf;
-            next = next_;
-        };
-        return tf;
-    }
-    else {
-        var files = [].concat(opts.entries).concat(opts.e)
-            .concat(opts._).filter(Boolean)
-        ;
-        if (files.length === 0) files = b._entries;
+
+    var files = [].concat(opts.entries).concat(opts.e)
+        .concat(opts._).filter(Boolean);
+
+    var needRecords = !files.length;
+
+    opts.objectMode = true;
+    opts.raw = true;
+    opts.rmap = {};
+
+    b.pipeline.get('record').push(through.obj(function(row, enc, next) {
+        if (needRecords) {
+            files.push(row.file);
+        }
+        next(null, row);
+    }, function(next) {
         var cwd = b._basedir || process.cwd();
         var fileMap = files.reduce(function (acc, x, ix) {
             acc[path.resolve(cwd, x)] = opts.o[ix];
             return acc;
         }, {});
-        opts.objectMode = true;
-        opts.raw = true;
-        
+
+        // Force browser-pack to wrap the common bundle
+        b._bpack.hasExports = true;
+        var packOpts = xtend(b._options, {
+            raw: true,
+            hasExports: true
+        });
+
         var s = createStream(files, opts);
         s.on('stream', function (bundle) {
             var ws = fs.createWriteStream(fileMap[bundle.file]);
-            var rmap = {};
-            bundle.pipe(through(function (row) {
-                if (/^\//.test(row.id)) {
-                    if (rmap[row.id]) {
-                        row.id = rmap[row.id];
-                    }
-                    else {
-                        var rowHash = b._hash(row.id);
-                        rmap[row.id] = rowHash;
-                        row.id = rowHash;
-                    }
-                }
-                Object.keys(row.deps).forEach(function (key) {
-                    var k = row.deps[key];
-                    if (hashMap[k]) row.deps[key] = hashMap[k];
-                    else if (/^\//.test(k)) {
-                        if (!rmap[k]) rmap[k] = b._hash(row.id);
-                        row.deps[key] = rmap[k];
-                    }
-                });
-                this.queue(row);
-            })).pipe(pack({ raw: true })).pipe(wrap()).pipe(ws);
+
+            bundle.pipe(pack(packOpts)).pipe(ws);
         });
 
-        var hashMap = {};
-        s.on('data', function (row) {
-            hashMap[row.id] = b.exports[row.id] = b._hash(row.id);
-        });
-        
-        var deps = b.deps;
-        b.deps = function (opts) {
-            return deps.call(b, opts).pipe(s);
-        };
-        
-        var bundle = b.bundle;
-        b.bundle = function () {
-            var s = bundle.apply(this, arguments);
-            if (!s.unshift) s = new Readable().wrap(s);
-            s.unshift('require=');
-            return s;
-        };
-        return s;
-    }
+        b.pipeline.get('pack').unshift(s);
+
+        next();
+    }));
+
+
+    b.pipeline.get('label').push(through.obj(function(row, enc, next) {
+        opts.rmap[row.id] = row.file;
+        next(null, row);
+    }));
+
+    return b;
+
 };
 
 function createStream (files, opts) {
@@ -147,6 +115,7 @@ function Factor (files, opts) {
         acc[path.resolve(self.basedir, file)] = true;
         return acc;
     }, {});
+    this._rmap = opts.rmap || {};
     
     this._thresholdVal = typeof opts.threshold === "number"
         ? opts.threshold : 1
@@ -163,11 +132,12 @@ function Factor (files, opts) {
 Factor.prototype._transform = function (row, enc, next) {
     var self = this;
     var groups = nub(self._groups[row.id] || []);
+    var id = this._resolveMap(row.id);
 
-    if (self._files[row.id]) {
-        var s = self._streams[row.id];
+    if (self._files[id]) {
+        var s = self._streams[id];
         if (!s) s = self._makeStream(row);
-        groups.push(row.id);
+        groups.push(id);
     }
     groups.forEach(addGroups);
 
@@ -206,9 +176,14 @@ Factor.prototype._flush = function () {
 
 Factor.prototype._makeStream = function (row) {
     var s = new Readable({ objectMode: true });
-    s.file = row.id;
+    var id = this._resolveMap(row.id);
+    s.file = id;
     s._read = function () {};
-    this._streams[row.id] = s;
+    this._streams[id] = s;
     this.emit('stream', s);
     return s;
 };
+
+Factor.prototype._resolveMap = function(id) {
+    return this._rmap[id] || id;
+}
