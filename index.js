@@ -48,7 +48,8 @@ module.exports = function f (b, opts) {
 
         var s = createStream(files, opts);
         s.on('stream', function (bundle) {
-            var ws = fs.createWriteStream(fileMap[bundle.file]);
+            var output = fileMap[bundle.file];
+            var ws = isStream(output) ? output : fs.createWriteStream(output);
 
             bundle.pipe(pack(packOpts)).pipe(ws);
         });
@@ -187,3 +188,5 @@ Factor.prototype._makeStream = function (row) {
 Factor.prototype._resolveMap = function(id) {
     return this._rmap[id] || id;
 }
+
+function isStream (s) { return s && typeof s.pipe === 'function' }

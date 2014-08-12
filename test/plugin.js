@@ -4,6 +4,9 @@ var fs = require('fs');
 var vm = require('vm');
 var mkdirp = require('mkdirp');
 var spawn = require('child_process').spawn;
+var browserify = require('browserify');
+var factor = require('../');
+var concat = require('concat-stream');
 
 var files = [
     __dirname + '/deps/x.js',
@@ -35,4 +38,31 @@ test('browserify plugin', function (t) {
             t.equal(msg, 333);
         } } });
     });
+});
+
+test('browserify plugin streams', function(t) {
+    t.plan(2);
+
+    var b = browserify(files);
+    var sources = {};
+    b.plugin(factor, {
+        o: [
+            concat(function(data) { sources.x = data }),
+            concat(function(data) { sources.y = data })
+        ]
+    });
+
+    b.bundle().pipe(concat(function(data) {
+        var common = data.toString('utf8');
+        var x = sources.x.toString('utf8');
+        var y = sources.y.toString('utf8');
+
+        vm.runInNewContext(common + x, { console: { log: function (msg) {
+            t.equal(msg, 55500);
+        } } });
+
+        vm.runInNewContext(common + y, { console: { log: function (msg) {
+            t.equal(msg, 333);
+        } } });
+    }));
 });
