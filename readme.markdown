@@ -143,7 +143,7 @@ The output format for `fr` and each of the `fr` sub-streams given by each
 `'stream'` event is also in the
 [module-deps](https://npmjs.org/package/module-deps) format.
 
-`opts.o` should be an array that pairs up with the `files` array to specify
+`opts.o` or `opts.outputs` should be an array that pairs up with the `files` array to specify
 where each bundle output for each entry file should be written. The elements in
 `opts.o` can be string filenames or writable streams.
 

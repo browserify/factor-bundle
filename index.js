@@ -24,47 +24,55 @@ module.exports = function f (b, opts) {
 
     var needRecords = !files.length;
 
+    opts.outputs = opts.outputs || opts.o;
     opts.objectMode = true;
     opts.raw = true;
     opts.rmap = {};
 
     var cwd = defined(opts.basedir, b._options.basedir, process.cwd());
-    b.pipeline.get('record').push(through.obj(function(row, enc, next) {
-        if (needRecords) {
-            files.push(row.file);
-        }
-        next(null, row);
-    }, function(next) {
-        var fileMap = files.reduce(function (acc, x, ix) {
-            acc[path.resolve(cwd, x)] = opts.o[ix];
-            return acc;
-        }, {});
 
-        // Force browser-pack to wrap the common bundle
-        b._bpack.hasExports = true;
-        var packOpts = xtend(b._options, {
-            raw: true,
-            hasExports: true
-        });
+    b.on('reset', addHooks);
+    addHooks();
 
-        var s = createStream(files, opts);
-        s.on('stream', function (bundle) {
-            var output = fileMap[bundle.file];
-            var ws = isStream(output) ? output : fs.createWriteStream(output);
+    function addHooks() {
+        b.pipeline.get('record').push(through.obj(function(row, enc, next) {
+            if (needRecords) {
+                files.push(row.file);
+            }
+            next(null, row);
+        }, function(next) {
+            var fileMap = files.reduce(function (acc, x, ix) {
+                acc[path.resolve(cwd, x)] = opts.outputs[ix];
+                return acc;
+            }, {});
 
-            bundle.pipe(pack(packOpts)).pipe(ws);
-        });
+            // Force browser-pack to wrap the common bundle
+            b._bpack.hasExports = true;
+            var packOpts = xtend(b._options, {
+                raw: true,
+                hasExports: true
+            });
 
-        b.pipeline.get('pack').unshift(s);
+            var s = createStream(files, opts);
+            s.on('stream', function (bundle) {
+                var output = fileMap[bundle.file];
+                var ws = isStream(output) ? output : fs.createWriteStream(output);
 
-        next();
-    }));
+                bundle.pipe(pack(packOpts)).pipe(ws);
+            });
 
+            b.pipeline.get('pack').unshift(s);
 
-    b.pipeline.get('label').push(through.obj(function(row, enc, next) {
-        opts.rmap[row.id] = path.resolve(cwd, row.file);
-        next(null, row);
-    }));
+            if (needRecords) files = [];
+
+            next();
+        }));
+
+        b.pipeline.get('label').push(through.obj(function(row, enc, next) {
+            opts.rmap[row.id] = path.resolve(cwd, row.file);
+            next(null, row);
+        }));
+    }
 
     return b;
 
