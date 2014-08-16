@@ -129,9 +129,12 @@ The output format for `fr` and each of the `fr` sub-streams given by each
 `'stream'` event is also in the
 [module-deps](https://npmjs.org/package/module-deps) format.
 
-`opts.o` should be an array that pairs up with the `files` array to specify
+`opts.o` or `opts.outputs` should be an array that pairs up with the `files` array to specify
 where each bundle output for each entry file should be written. The elements in
 `opts.o` can be string filenames or writable streams.
+
+`opts.entries` or `opts.e` is an optional array of entries that may be used
+instead of passing entries to browserify.
 
 The files held in common among `> opts.threshold` (default: 1) bundles will be
 output on the `fr` stream itself. The entry-specific bundles are diverted into
