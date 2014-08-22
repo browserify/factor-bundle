@@ -11,6 +11,7 @@ var reverse = require('reversepoint');
 var fs = require('fs');
 var pack = require('browser-pack');
 var xtend = require('xtend');
+var defined = require('defined');
 
 module.exports = function f (b, opts) {
     if (!opts) opts = {};
@@ -33,7 +34,7 @@ module.exports = function f (b, opts) {
         }
         next(null, row);
     }, function(next) {
-        var cwd = b._basedir || process.cwd();
+        var cwd = defined(opts.basedir, b._options.basedir, process.cwd());
         var fileMap = files.reduce(function (acc, x, ix) {
             acc[path.resolve(cwd, x)] = opts.o[ix];
             return acc;
@@ -105,7 +106,7 @@ function Factor (files, opts) {
     Transform.call(this, { objectMode: true });
     
     if (!opts) opts = {};
-    this.basedir = opts.basedir || process.cwd();
+    this.basedir = defined(opts.basedir, process.cwd());
     
     this._streams = {};
     this._groups = {};
