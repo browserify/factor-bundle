@@ -147,6 +147,9 @@ Factor.prototype._transform = function (row, enc, next) {
         Object.keys(row.deps).forEach(function(k) {
             self._ensureCommon[row.deps[k]] = true;
         });
+        if (row.dedupeIndex) {
+            self._ensureCommon[row.dedupeIndex] = true;
+        }
         self.push(row);
     }
     else {
