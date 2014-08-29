@@ -3,11 +3,11 @@ var through = require('through');
 var factor = require('../');
 
 var ROWS = {
-    A: { id: 1, file: '/a.js', deps: { '/e.js': 5 } },
-    B: { id: 2, file: '/b.js', deps: { '/e.js': 5 } },
-    C: { id: 3, file: '/c.js', deps: { '/d.js': 4, '/x.js': 6 } },
-    D: { id: 4, file: '/d.js', deps: { '/x.js': 6 } },
-    E: { id: 5, file: '/e.js', deps: { '/x.js': 6 }, dedupeIndex: 4, dedupe: '/d.js' },
+    A: { id: 1, file: '/a.js', deps: { 'E': 5 } },
+    B: { id: 2, file: '/b.js', deps: { 'D': 4 } },
+    C: { id: 3, file: '/c.js', deps: { 'D': 4, 'X': 6 } },
+    D: { id: 4, file: '/d.js', deps: { 'X': 6 }, dedupeIndex: 5 },
+    E: { id: 5, file: '/e.js', deps: { 'X': 6 } },
     X: { id: 6, file: '/x.js', deps: {} }
 };
 

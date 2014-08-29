@@ -74,17 +74,18 @@ function createStream (files, opts) {
     if (!opts) opts = {};
     
     var fr = new Factor(files, opts);
-    var sort = sortDeps();
     var parse, dup;
     
     if (opts.objectMode) {
-        dup = combine(sort, fr);
+        dup = combine(depsTopoSort(), reverse(), fr);
     }
     else {
         parse = JSONStream.parse([true]);
         dup = opts.raw
-            ? combine(parse, sort, fr)
-            : combine(parse, sort, fr, JSONStream.stringify())
+            ? combine(parse, depsTopoSort(), reverse(), fr)
+            : combine(
+                parse, depsTopoSort(), reverse(), fr, JSONStream.stringify()
+            )
         ;
         parse.on('error', function (err) { dup.emit('error', err) });
     }
@@ -190,26 +191,6 @@ Factor.prototype._makeStream = function (row) {
 
 Factor.prototype._resolveMap = function(id) {
     return this._rmap[id] || id;
-};
+}
 
 function isStream (s) { return s && typeof s.pipe === 'function' }
-
-function sortDeps () {
-    // create implied dependencies on dedupe targets for proper sorting
-    return combine(
-        through.obj(function(row, enc, next) {
-            if (row.dedupeIndex && row.dedupe) {
-                row.deps[row.dedupe] = row.dedupeIndex;
-            }
-            next(null, row);
-        }),
-        depsTopoSort(),
-        through.obj(function(row, enc, next) {
-            if (row.dedupeIndex && row.dedupe) {
-                delete row.deps[row.dedupe];
-            }
-            next(null, row);
-        }),
-        reverse()
-    );
-}
