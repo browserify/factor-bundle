@@ -12,6 +12,7 @@ var fs = require('fs');
 var pack = require('browser-pack');
 var xtend = require('xtend');
 var defined = require('defined');
+var splicer = require('labeled-stream-splicer');
 
 module.exports = function f (b, opts) {
     if (!opts) opts = {};
@@ -24,41 +25,51 @@ module.exports = function f (b, opts) {
 
     var needRecords = !files.length;
 
-    opts.outputs = opts.outputs || opts.o;
+    opts.outputs = defined(opts.outputs, opts.o, {});
     opts.objectMode = true;
     opts.raw = true;
     opts.rmap = {};
 
-    var cwd = defined(opts.basedir, b._options.basedir, process.cwd());
+    var cwd = defined(opts.basedir, b._options.basedir, process.cwd()),
+        packOpts = xtend(b._options, {
+          raw: true,
+          hasExports: true
+        });
 
     b.on('reset', addHooks);
     addHooks();
 
-    function addHooks() {
+    function addHooks () {
         b.pipeline.get('record').push(through.obj(function(row, enc, next) {
             if (needRecords) {
                 files.push(row.file);
             }
             next(null, row);
         }, function(next) {
-            var fileMap = files.reduce(function (acc, x, ix) {
-                acc[path.resolve(cwd, x)] = opts.outputs[ix];
+            var pipelines = files.reduce(function (acc, x, ix) {
+                var pipeline = splicer.obj([
+                    'pack', [ pack(packOpts) ],
+                    'wrap', []
+                ]);
+                var output = opts.outputs[ix];
+                if (output) {
+                    var ws = isStream(output) ? output : fs.createWriteStream(output);
+                    pipeline.push(ws);
+                }
+                acc[path.resolve(cwd, x)] = pipeline;
                 return acc;
             }, {});
 
             // Force browser-pack to wrap the common bundle
             b._bpack.hasExports = true;
-            var packOpts = xtend(b._options, {
-                raw: true,
-                hasExports: true
+
+            Object.keys(pipelines).forEach(function (id) {
+                b.emit('factor.pipeline', id, pipelines[id]);
             });
 
             var s = createStream(files, opts);
             s.on('stream', function (bundle) {
-                var output = fileMap[bundle.file];
-                var ws = isStream(output) ? output : fs.createWriteStream(output);
-
-                bundle.pipe(pack(packOpts)).pipe(ws);
+                bundle.pipe(pipelines[bundle.file]);
             });
 
             b.pipeline.get('pack').unshift(s);

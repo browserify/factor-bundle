@@ -10,6 +10,7 @@
     "defined": "0.0.0",
     "deps-topo-sort": "~0.2.1",
     "inherits": "^2.0.1",
+    "labeled-stream-splicer": "^1.0.0",
     "minimist": "~0.2.0",
     "nub": "0.0.0",
     "reversepoint": "~0.2.0",

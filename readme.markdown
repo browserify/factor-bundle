@@ -179,6 +179,17 @@ default).
 
 The entry file name is available as `stream.file`.
 
+## b.on('factor.pipeline', function (file, pipeline) {})
+
+Emits the full path to the entry file (`file`) and a [labeled-stream-splicer](https://npmjs.org/package/labeled-stream-splicer) (`pipeline`) for each entry file with these labels:
+
+* `'pack'` - [browser-pack](https://npmjs.org/package/browser-pack)
+* `'wrap'` - apply final wrapping
+
+You can call `pipeline.get` with a label name to get a handle on a stream pipeline that you can `push()`, `unshift()`, or `splice()` to insert your own transform streams.
+
+Event handlers must be attached *before* calling `b.plugin`.
+
 # install
 
 With [npm](https://npmjs.org) do:
