@@ -72,12 +72,13 @@ test('browserify plugin multiple bundle calls', function(t) {
 
     var b = browserify(files);
     var sources = {};
-    b.plugin(factor, {
-        o: [
-            function() { return concat(function(data) { sources.x = data }); },
-            function() { return concat(function(data) { sources.y = data }); }
-        ]
+    b.on('factor.pipeline', function(id, pipeline) {
+        pipeline.pipe(concat(function(data) {
+            if (/x\.js$/.test(id)) sources.x = data;
+            else sources.y = data;
+        }));
     });
+    b.plugin(factor);
 
     b.bundle().pipe(concat(function(data) {
         checkBundle(data);
