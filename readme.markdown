@@ -84,6 +84,23 @@ $ cat bundle/common.js bundle/y.js | node
 333
 ```
 
+## api plugin example
+
+If you prefer you can use the factor-bundle plugin api directly in code:
+
+``` js
+var browserify = require('browserify');
+var fs = require('fs');
+
+var files = [ __dirname + '/files/x.js', __dirname + '/files/y.js' ];
+var b = browserify(files);
+b.plugin('factor-bundle', {
+    entries: files,
+    o: [ 'bundle/x.js', 'bundle/y.js' ]
+});
+b.bundle().pipe(fs.createWriteStream('bundle/common.js'));
+```
+
 # usage
 
 You can use factor-bundle as a browserify plugin:
@@ -132,6 +149,9 @@ The output format for `fr` and each of the `fr` sub-streams given by each
 `opts.o` should be an array that pairs up with the `files` array to specify
 where each bundle output for each entry file should be written. The elements in
 `opts.o` can be string filenames or writable streams.
+
+`opts.entries` or `opts.e` should be the array of entry files to create
+a page-specific bundle for each file.
 
 The files held in common among `> opts.threshold` (default: 1) bundles will be
 output on the `fr` stream itself. The entry-specific bundles are diverted into
