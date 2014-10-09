@@ -1,6 +1,6 @@
 {
   "name": "factor-bundle",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "factor browser-pack bundles into common shared bundles",
   "main": "index.js",
   "bin": "bin/cmd.js",
