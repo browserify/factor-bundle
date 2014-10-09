@@ -92,7 +92,7 @@ If you prefer you can use the factor-bundle plugin api directly in code:
 var browserify = require('browserify');
 var fs = require('fs');
 
-var files = [ __dirname + '/files/x.js', __dirname + '/files/y.js' ];
+var files = [ './files/x.js', './files/y.js' ];
 var b = browserify(files);
 b.plugin('factor-bundle', { o: [ 'bundle/x.js', 'bundle/y.js' ] });
 b.bundle().pipe(fs.createWriteStream('bundle/common.js'));
