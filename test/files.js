@@ -96,7 +96,7 @@ test('same module included twice', function (t) {
 
     var expected = {
         common: [],
-        't.js': [
+        't.js': sortRows([
             read('t.js', {
                 entry: true,
                 deps: { './a.js': norm('a.js'), './w.js': norm('w.js') }
@@ -105,7 +105,7 @@ test('same module included twice', function (t) {
                 deps: { './a.js': norm('a.js') }
             }),
             read('a.js')
-        ]
+        ])
     };
 
     var packs = {
@@ -160,7 +160,7 @@ test('threshold function reorganizes bundles', function (t) {
         common: [
             read('z.js')
         ],
-        't.js': [
+        't.js': sortRows([
             read('t.js', {
                 entry: true,
                 deps: { './a.js': norm('a.js'), './w.js': norm('w.js') }
@@ -169,14 +169,14 @@ test('threshold function reorganizes bundles', function (t) {
                 deps: { './a.js': norm('a.js') }
             }),
             read('a.js')
-        ],
-        'y.js': [
+        ]),
+        'y.js': sortRows([
             read('y.js', {
                 entry: true,
                 deps: { './z.js': norm('z.js'), './a.js': norm('a.js') }
             }),
             read('a.js')
-        ]
+        ])
     };
 
     var packs = {
@@ -313,7 +313,13 @@ function rowsOf (cb) {
     return through(write, end);
 
     function write (row) { rows.push(row) }
-    function end () { cb(rows) }
+    function end () { cb(sortRows(rows)) }
+}
+
+function sortRows (rows) {
+    return rows.sort(function (a, b) {
+        return a.id < b.id ? 1 : -1;
+    });
 }
 
 function read (name, ref) {
