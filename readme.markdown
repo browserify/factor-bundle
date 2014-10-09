@@ -94,10 +94,7 @@ var fs = require('fs');
 
 var files = [ __dirname + '/files/x.js', __dirname + '/files/y.js' ];
 var b = browserify(files);
-b.plugin('factor-bundle', {
-    entries: files,
-    o: [ 'bundle/x.js', 'bundle/y.js' ]
-});
+b.plugin('factor-bundle', { o: [ 'bundle/x.js', 'bundle/y.js' ] });
 b.bundle().pipe(fs.createWriteStream('bundle/common.js'));
 ```
 
@@ -151,7 +148,8 @@ where each bundle output for each entry file should be written. The elements in
 `opts.o` can be string filenames or writable streams.
 
 `opts.entries` or `opts.e` should be the array of entry files to create
-a page-specific bundle for each file.
+a page-specific bundle for each file. If you don't pass in an `opts.entries`,
+this information is gathered from browserify itself.
 
 The files held in common among `> opts.threshold` (default: 1) bundles will be
 output on the `fr` stream itself. The entry-specific bundles are diverted into
