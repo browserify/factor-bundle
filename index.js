@@ -28,13 +28,13 @@ module.exports = function f (b, opts) {
     opts.raw = true;
     opts.rmap = {};
 
+    var cwd = defined(opts.basedir, b._options.basedir, process.cwd());
     b.pipeline.get('record').push(through.obj(function(row, enc, next) {
         if (needRecords) {
             files.push(row.file);
         }
         next(null, row);
     }, function(next) {
-        var cwd = defined(opts.basedir, b._options.basedir, process.cwd());
         var fileMap = files.reduce(function (acc, x, ix) {
             acc[path.resolve(cwd, x)] = opts.o[ix];
             return acc;
@@ -62,7 +62,7 @@ module.exports = function f (b, opts) {
 
 
     b.pipeline.get('label').push(through.obj(function(row, enc, next) {
-        opts.rmap[row.id] = row.file;
+        opts.rmap[row.id] = path.resolve(cwd, row.file);
         next(null, row);
     }));
 
