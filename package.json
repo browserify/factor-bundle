@@ -24,6 +24,7 @@
     "concat-stream": "^1.4.6",
     "mkdirp": "~0.5.0",
     "module-deps": "^2.1.0",
+    "osenv": "^0.1.0",
     "tape": "^2.13.0",
     "through": "^2.3.4"
   },
