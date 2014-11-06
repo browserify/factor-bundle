@@ -98,6 +98,26 @@ b.plugin('factor-bundle', { outputs: [ 'bundle/x.js', 'bundle/y.js' ] });
 b.bundle().pipe(fs.createWriteStream('bundle/common.js'));
 ```
 
+or instead of writing to files you can output to writable streams:
+
+``` js
+var browserify = require('browserify');
+var concat = require('concat-stream');
+
+var files = [ './files/x.js', './files/y.js' ];
+var b = browserify(files);
+
+b.plugin('factor-bundle', { outputs: [ write('x'), write('y') ] });
+b.bundle().pipe(write('common'));
+
+function write (name) {
+    return concat(function (body) {
+        console.log('// ----- ' + name + ' -----');
+        console.log(body.toString('utf8'));
+    });
+}
+```
+
 # usage
 
 You can use factor-bundle as a browserify plugin:
