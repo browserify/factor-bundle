@@ -94,7 +94,7 @@ var fs = require('fs');
 
 var files = [ './files/x.js', './files/y.js' ];
 var b = browserify(files);
-b.plugin('factor-bundle', { o: [ 'bundle/x.js', 'bundle/y.js' ] });
+b.plugin('factor-bundle', { outputs: [ 'bundle/x.js', 'bundle/y.js' ] });
 b.bundle().pipe(fs.createWriteStream('bundle/common.js'));
 ```
 
