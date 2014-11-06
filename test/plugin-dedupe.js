@@ -1,7 +1,7 @@
 var test = require('tape');
-var os = require('os');
 var fs = require('fs');
 var vm = require('vm');
+var tmp = require('osenv').tmpdir;
 var mkdirp = require('mkdirp');
 var spawn = require('child_process').spawn;
 var browserify = require('browserify');
@@ -13,7 +13,7 @@ var files = [
     __dirname + '/dedupe/b.js',
     __dirname + '/dedupe/c.js'
 ];
-var tmpdir = os.tmpdir() + '/factor-bundle-' + Math.random();
+var tmpdir = tmp() + '/factor-bundle-' + Math.random();
 mkdirp.sync(tmpdir);
 
 test('browserify plugin handles deduped modules', function (t) {

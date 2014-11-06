@@ -1,5 +1,5 @@
 var test = require('tape');
-var os = require('os');
+var tmp = require('osenv').tmpdir;
 var fs = require('fs');
 var vm = require('vm');
 var mkdirp = require('mkdirp');
@@ -12,7 +12,7 @@ var files = [
     __dirname + '/deps/x.js',
     __dirname + '/deps/y.js'
 ];
-var tmpdir = os.tmpdir() + '/factor-bundle-' + Math.random();
+var tmpdir = tmp() + '/factor-bundle-' + Math.random();
 mkdirp.sync(tmpdir);
 
 test('browserify plugin', function (t) {

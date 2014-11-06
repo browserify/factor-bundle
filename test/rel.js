@@ -1,5 +1,5 @@
 var test = require('tape');
-var os = require('os');
+var tmp = require('osenv').tmpdir;
 var fs = require('fs');
 var path = require('path');
 var vm = require('vm');
@@ -8,7 +8,7 @@ var browserify = require('browserify');
 var factor = require('../');
 var concat = require('concat-stream');
 
-var tmpdir = os.tmpdir() + '/factor-bundle-' + Math.random();
+var tmpdir = tmp() + '/factor-bundle-' + Math.random();
 mkdirp.sync(tmpdir);
 
 var cwd = process.cwd();
