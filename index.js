@@ -41,7 +41,7 @@ module.exports = function f (b, opts) {
 
     function addHooks () {
         b.pipeline.get('record').push(through.obj(function(row, enc, next) {
-            if (needRecords) {
+            if (row.file && needRecords) {
                 files.push(row.file);
             }
             next(null, row);
