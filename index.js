@@ -33,7 +33,7 @@ module.exports = function f (b, opts) {
     var cwd = defined(opts.basedir, b._options.basedir, process.cwd()),
         packOpts = xtend(b._options, {
           raw: true,
-          hasExports: true
+          hasExports: typeof opts.hasExports === 'boolean' ? opts.hasExports : true
         });
 
     b.on('reset', addHooks);
@@ -61,7 +61,7 @@ module.exports = function f (b, opts) {
             }, {});
 
             // Force browser-pack to wrap the common bundle
-            b._bpack.hasExports = true;
+            b._bpack.hasExports = typeof opts.hasExports === 'boolean' ? opts.hasExports : true;
 
             Object.keys(pipelines).forEach(function (id) {
                 b.emit('factor.pipeline', id, pipelines[id]);
