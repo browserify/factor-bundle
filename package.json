@@ -13,6 +13,7 @@
     "labeled-stream-splicer": "^1.0.0",
     "minimist": "~0.2.0",
     "nub": "0.0.0",
+    "readable-stream": "^1.0.33",
     "reversepoint": "~0.2.0",
     "stream-combiner": "~0.2.1",
     "through2": "^0.5.1",
