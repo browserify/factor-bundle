@@ -54,7 +54,7 @@ $ module-deps x.js y.js | factor-bundle \
 or factor out an existing bundle already compiled by browserify:
 
 ``` sh
-$ browserify x.js y.js > bundle.js
+$ browserify --full-paths x.js y.js > bundle.js
 $ browser-unpack < bundle.js | factor-bundle \
   x.js -o bundle/x.js \
   y.js -o bundle/y.js \
