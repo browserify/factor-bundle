@@ -6,6 +6,7 @@ var factor = require('../');
 var minimist = require('minimist');
 var pack = require('browser-pack');
 var Transform = require('stream').Transform;
+var mkdirp = require('mkdirp');
 
 var argv = minimist(process.argv.slice(2));
 if (argv.h || argv.help || argv._.length === 0) {
@@ -25,7 +26,11 @@ var output = argv.o.length > files.length && argv.o[files.length] !== '-'
 ;
 
 fr.on('stream', function (bundle) {
-    var ws = fs.createWriteStream(files[bundle.file]);
-    bundle.pipe(pack({ raw: true })).pipe(ws);
+  
+    mkdirp(path.dirname(files[bundle.file]), function(err) {
+	var ws = fs.createWriteStream(files[bundle.file]);
+    	bundle.pipe(pack({ raw: true })).pipe(ws);
+    });
 });
+
 process.stdin.pipe(fr).pipe(pack({ raw: true })).pipe(output);
