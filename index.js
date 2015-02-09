@@ -53,7 +53,12 @@ module.exports = function f (b, opts) {
                 ]);
                 var output = opts.outputs[ix];
                 if (output) {
-                    var ws = isStream(output) ? output : fs.createWriteStream(output);
+                    var ws;
+                    if ('function' === typeof output) {
+                      ws = output();
+                    } else {
+                      ws = isStream(output) ? output : fs.createWriteStream(output);
+                    }
                     pipeline.pipe(ws);
                 }
                 acc[path.resolve(cwd, x)] = pipeline;
