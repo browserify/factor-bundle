@@ -28,12 +28,16 @@ module.exports = function f (b, opts) {
     var needRecords = !files.length;
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
-    var outputs = defined(outopt, []);
+    var outputs = defined(outopt, []).map(function (o) {
+        if (isStream(o)) return o;
+        else return fs.createWriteStream(o);
+    });
     if (!isarray(outputs) && isStream(outputs)) outputs = [ outputs ];
     else if (!isarray(outputs)) outputs = [];
     
     function moreOutputs (file) {
-        if (isarray(outopt)) return null;
+        if (isarray(outopt)) return [];
+        if (!outopt) return [];
         var xopts = { env: xtend(process.env, { FILE: file }) };
         return [ outpipe(outopt, xopts) ];
     }
