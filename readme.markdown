@@ -84,6 +84,17 @@ $ cat bundle/common.js bundle/y.js | node
 333
 ```
 
+## command-line outpipe example
+
+We can pipe each output file through some other processes. Here we'll do
+minification with uglify compression with gzip:
+
+``` sh
+browserify files/*.js \
+    -p [ ../ -o 'uglifyjs -cm | gzip > bundle/`basename $FILE`.gz' ] \
+    | uglifyjs -cm | gzip > bundle/common.js.gz
+```
+
 ## api plugin example
 
 If you prefer you can use the factor-bundle plugin api directly in code:
