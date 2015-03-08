@@ -127,7 +127,8 @@ browserify -p [ factor-bundle OPTIONS ]
 
 where OPTIONS are:
 
-  -o  Output file that maps to a corresponding entry file at the same index
+  -o  Output FILE or CMD that maps to a corresponding entry file at the same
+      index. CMDs are executed with $FILE set to the corresponding input file.
  
   -e  Entry file to use, overriding the entry files listed in the original
       bundle.
@@ -142,8 +143,23 @@ usage: factor-bundle [ x.js -o bundle/x.js ... ] > bundle/common.js
 Read `module-deps` json output from stdin, factoring each entry file out into
 the corresponding output file (-o).
 
-If there is a trailing unpaired `-o`, that file will be used for the common
-bundle output. Otherwise, the final bundle is written to stdout.
+  -o FILE, -o CMD
+
+    Write output to FILE or CMD. CMD is distinguished from FILE by the presence
+    of one or more `>` or `|` characters. For example, use:
+    
+      factor-bundle browser/a.js browser/b.js \
+        -o bundle/a.js -o bundle/b.js
+    
+    to write to a FILE. And do something like:
+
+      factor-bundle browser/*.js \
+        -o 'uglifyjs -cm | gzip > bundle/`basename $FILE`.gz'
+
+    to use a CMD. In the CMD, $FILE is set to the corresponding input file path.
+
+    If there is a trailing unpaired `-o`, that file will be used for the common
+    bundle output. Otherwise, the final bundle is written to stdout.
 
 ```
 
