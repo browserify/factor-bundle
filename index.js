@@ -13,6 +13,8 @@ var pack = require('browser-pack');
 var xtend = require('xtend');
 var defined = require('defined');
 var splicer = require('labeled-stream-splicer');
+var outpipe = require('outpipe');
+var isarray = require('isarray');
 
 module.exports = function f (b, opts) {
     if (!opts) opts = {};
@@ -24,8 +26,18 @@ module.exports = function f (b, opts) {
         .concat(opts._).filter(Boolean);
 
     var needRecords = !files.length;
-
-    opts.outputs = defined(opts.outputs, opts.o, {});
+    
+    var outopt = defined(opts.outputs, opts.output, opts.o);
+    var outputs = defined(outopt, []);
+    if (!isarray(outputs) && isStream(outputs)) outputs = [ outputs ];
+    else if (!isarray(outputs)) outputs = [];
+    
+    function moreOutputs (file) {
+        if (isarray(outopt)) return null;
+        var xopts = { env: xtend(process.env, { FILE: file }) };
+        return [ outpipe(outopt, xopts) ];
+    }
+    
     opts.objectMode = true;
     opts.raw = true;
     opts.rmap = {};
@@ -51,11 +63,11 @@ module.exports = function f (b, opts) {
                     'pack', [ pack(packOpts) ],
                     'wrap', []
                 ]);
-                var output = opts.outputs[ix];
-                if (output) {
-                    var ws = isStream(output) ? output : fs.createWriteStream(output);
-                    pipeline.pipe(ws);
+                if (ix >= outputs.length) {
+                    outputs.push.apply(outputs, moreOutputs(x));
                 }
+                if (outputs[ix]) pipeline.pipe(outputs[ix]);
+                
                 acc[path.resolve(cwd, x)] = pipeline;
                 return acc;
             }, {});
