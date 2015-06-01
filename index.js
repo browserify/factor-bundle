@@ -28,6 +28,7 @@ module.exports = function f (b, opts) {
     var needRecords = !files.length;
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
+    if (outopt && !isarray(outopt)) outopt = [outopt];
     var outputs = defined(outopt, []).map(function (o) {
         if (isStream(o)) return o;
         else return fs.createWriteStream(o);
