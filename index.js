@@ -28,7 +28,14 @@ module.exports = function f (b, opts) {
     var needRecords = !files.length;
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
-    
+
+    function moreOutputs (file) {
+        if (isarray(outopt)) return [];
+        if (!outopt) return [];
+        var xopts = { env: xtend(process.env, { FILE: file }) };
+        return [ outpipe(outopt, xopts) ];
+    }
+
     opts.objectMode = true;
     opts.raw = true;
     opts.rmap = {};
@@ -51,13 +58,6 @@ module.exports = function f (b, opts) {
             });
         } else {
             outputs = [];
-        }
-
-        function moreOutputs (file) {
-            if (isarray(outopt)) return [];
-            if (!outopt) return [];
-            var xopts = { env: xtend(process.env, { FILE: file }) };
-            return [ outpipe(outopt, xopts) ];
         }
 
         b.pipeline.get('record').push(through.obj(function(row, enc, next) {
