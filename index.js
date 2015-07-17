@@ -28,13 +28,17 @@ module.exports = function f (b, opts) {
     var needRecords = !files.length;
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
-    if (outopt && !isarray(outopt)) outopt = [outopt];
-    var outputs = defined(outopt, []).map(function (o) {
-        if (isStream(o)) return o;
-        else return fs.createWriteStream(o);
-    });
-    if (!isarray(outputs) && isStream(outputs)) outputs = [ outputs ];
-    else if (!isarray(outputs)) outputs = [];
+    if (typeof outopt === 'function') {
+        var outputs = outopt
+    } else {
+        if (outopt && !isarray(outopt)) outopt = [outopt];
+        var outputs = defined(outopt, []).map(function (o) {
+            if (isStream(o)) return o;
+            else return fs.createWriteStream(o);
+        });
+        if (!isarray(outputs) && isStream(outputs)) outputs = [ outputs ];
+        else if (!isarray(outputs)) outputs = [];
+    }
     
     function moreOutputs (file) {
         if (isarray(outopt)) return [];
@@ -68,10 +72,14 @@ module.exports = function f (b, opts) {
                     'pack', [ pack(packOpts) ],
                     'wrap', []
                 ]);
-                if (ix >= outputs.length) {
-                    outputs.push.apply(outputs, moreOutputs(x));
+                if (typeof outputs === 'function') {
+                    pipeline.pipe(outputs(x))
+                } else {
+                    if (ix >= outputs.length) {
+                        outputs.push.apply(outputs, moreOutputs(x));
+                    }
+                    if (outputs[ix]) pipeline.pipe(outputs[ix]);
                 }
-                if (outputs[ix]) pipeline.pipe(outputs[ix]);
                 
                 acc[path.resolve(cwd, x)] = pipeline;
                 return acc;

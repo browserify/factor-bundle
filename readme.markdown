@@ -140,6 +140,7 @@ where OPTIONS are:
 
   -o  Output FILE or CMD that maps to a corresponding entry file at the same
       index. CMDs are executed with $FILE set to the corresponding input file.
+      Optionally specify a function that return a writable stream.
  
   -e  Entry file to use, overriding the entry files listed in the original
       bundle.
