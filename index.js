@@ -28,21 +28,14 @@ module.exports = function f (b, opts) {
     var needRecords = !files.length;
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
-    if (outopt && !isarray(outopt)) outopt = [outopt];
-    var outputs = defined(outopt, []).map(function (o) {
-        if (isStream(o)) return o;
-        else return fs.createWriteStream(o);
-    });
-    if (!isarray(outputs) && isStream(outputs)) outputs = [ outputs ];
-    else if (!isarray(outputs)) outputs = [];
-    
+
     function moreOutputs (file) {
         if (isarray(outopt)) return [];
         if (!outopt) return [];
         var xopts = { env: xtend(process.env, { FILE: file }) };
         return [ outpipe(outopt, xopts) ];
     }
-    
+
     opts.objectMode = true;
     opts.raw = true;
     opts.rmap = {};
@@ -57,6 +50,16 @@ module.exports = function f (b, opts) {
     addHooks();
 
     function addHooks () {
+        var outputs;
+        if (isarray(outopt)) {
+            outputs = outopt.map(function (o) {
+                if (isStream(o)) return o;
+                return fs.createWriteStream(o);
+            });
+        } else {
+            outputs = [];
+        }
+
         b.pipeline.get('record').push(through.obj(function(row, enc, next) {
             if (row.file && needRecords) {
                 files.push(row.file);
