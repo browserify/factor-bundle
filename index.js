@@ -28,17 +28,11 @@ module.exports = function f (b, opts) {
     var needRecords = !files.length;
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
-    if (outopt && !isarray(outopt)) outopt = [outopt];
-    var outputs = defined(outopt, []).map(function (o) {
-        if (isStream(o)) return o;
-        else return fs.createWriteStream(o);
-    });
-    if (!isarray(outputs) && isStream(outputs)) outputs = [ outputs ];
-    else if (!isarray(outputs)) outputs = [];
+    if (outopt && !isarray(outopt) && isStream(outopt)) outopt = [outopt];
     
     function moreOutputs (file) {
-        if (isarray(outopt)) return [];
         if (!outopt) return [];
+        if (typeof outopt !== 'string') return [];
         var xopts = { env: xtend(process.env, { FILE: file }) };
         return [ outpipe(outopt, xopts) ];
     }
@@ -56,6 +50,17 @@ module.exports = function f (b, opts) {
     b.on('reset', addHooks);
     addHooks();
 
+    function getOutputs(files) {
+        if (typeof outopt === 'function') return outopt(files);
+        if (outopt && isarray(outopt)) {
+            return outopt.map(function (o) {
+                if (isStream(o)) return o;
+                return fs.createWriteStream(o);
+            });
+        }
+        return [];
+    }
+
     function addHooks () {
         b.pipeline.get('record').push(through.obj(function(row, enc, next) {
             if (row.file && needRecords) {
@@ -63,6 +68,7 @@ module.exports = function f (b, opts) {
             }
             next(null, row);
         }, function(next) {
+            var outputs = getOutputs(files);
             var pipelines = files.reduce(function (acc, x, ix) {
                 var pipeline = splicer.obj([
                     'pack', [ pack(packOpts) ],
@@ -80,9 +86,13 @@ module.exports = function f (b, opts) {
             // Force browser-pack to wrap the common bundle
             b._bpack.hasExports = true;
 
-            Object.keys(pipelines).forEach(function (id) {
+            var ids = Object.keys(pipelines);
+            ids.forEach(function (id) {
                 b.emit('factor.pipeline', id, pipelines[id]);
             });
+            b.emit('factor.pipelines', ids, ids.map(function (id) {
+                return pipelines[id];
+            }), outputs);
 
             var s = createStream(files, opts);
             s.on('stream', function (bundle) {

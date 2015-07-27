@@ -193,6 +193,7 @@ The output format for `fr` and each of the `fr` sub-streams given by each
 `opts.o` or `opts.outputs` should be an array that pairs up with the `files` array to specify
 where each bundle output for each entry file should be written. The elements in
 `opts.o` can be string filenames or writable streams.
+`opts.o` (version > 2.4.1) can be a callback which receives the `files` array, and should return the paired `outputs` array.
 
 `opts.entries` or `opts.e` should be the array of entry files to create
 a page-specific bundle for each file. If you don't pass in an `opts.entries`,
@@ -236,6 +237,12 @@ Emits the full path to the entry file (`file`) and a [labeled-stream-splicer](ht
 You can call `pipeline.get` with a label name to get a handle on a stream pipeline that you can `push()`, `unshift()`, or `splice()` to insert your own transform streams.
 
 Event handlers must be attached *before* calling `b.plugin`.
+
+## b.on('factor.pipelines', function (files, pipelines, outputs) {})
+
+Instead of emitting pipelines one by one like `factor.pipeline` event does, this event emits all the pipelines.
+In addition, this event also emits all the output streams.
+`files`, `pipelines`, `outputs` are all instances of `Array`.
 
 # install
 
