@@ -67,19 +67,22 @@ module.exports = function f (b, opts) {
             }
             next(null, row);
         }, function(next) {
+            var outputResult;
+
+            if (typeof outputs === 'function') {
+                outputResult = outputs();
+            } else outputResult = outputs;
+
             var pipelines = files.reduce(function (acc, x, ix) {
                 var pipeline = splicer.obj([
                     'pack', [ pack(packOpts) ],
                     'wrap', []
                 ]);
-                if (typeof outputs === 'function') {
-                    pipeline.pipe(outputs(x))
-                } else {
-                    if (ix >= outputs.length) {
-                        outputs.push.apply(outputs, moreOutputs(x));
-                    }
-                    if (outputs[ix]) pipeline.pipe(outputs[ix]);
+
+                if (ix >= outputResult.length) {
+                    outputResult.push.apply(outputResult, moreOutputs(x));
                 }
+                if (outputResult[ix]) pipeline.pipe(outputResult[ix]);
                 
                 acc[path.resolve(cwd, x)] = pipeline;
                 return acc;
