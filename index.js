@@ -28,18 +28,7 @@ module.exports = function f (b, opts) {
     var needRecords = !files.length;
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
-    if (typeof outopt === 'function') {
-        var outputs = outopt
-    } else {
-        if (outopt && !isarray(outopt)) outopt = [outopt];
-        var outputs = defined(outopt, []).map(function (o) {
-            if (isStream(o)) return o;
-            else return fs.createWriteStream(o);
-        });
-        if (!isarray(outputs) && isStream(outputs)) outputs = [ outputs ];
-        else if (!isarray(outputs)) outputs = [];
-    }
-    
+     
     function moreOutputs (file) {
         if (isarray(outopt)) return [];
         if (!outopt) return [];
@@ -67,11 +56,21 @@ module.exports = function f (b, opts) {
             }
             next(null, row);
         }, function(next) {
-            var outputResult;
+   if (outopt && !isarray(outopt) && ! typeof outputs === 'function') outopt = [outopt];
+            var outputs = defined(outopt, []);
 
             if (typeof outputs === 'function') {
-                outputResult = outputs();
-            } else outputResult = outputs;
+                outputs = outputs();
+            } else if (!isarray(outputs) && isStream(outputs)) {
+                outputs = [ outputs ];
+            } else if (!isarray(outputs)) {
+                outputs = [];
+            } else {
+                outputs = outputs.map(function (o) {
+                    if (isStream(o)) return o;
+                    else return fs.createWriteStream(o);
+                });
+            }
 
             var pipelines = files.reduce(function (acc, x, ix) {
                 var pipeline = splicer.obj([
@@ -79,10 +78,10 @@ module.exports = function f (b, opts) {
                     'wrap', []
                 ]);
 
-                if (ix >= outputResult.length) {
-                    outputResult.push.apply(outputResult, moreOutputs(x));
+                if (ix >= outputs.length) {
+                    outputs.push.apply(outputs, moreOutputs(x));
                 }
-                if (outputResult[ix]) pipeline.pipe(outputResult[ix]);
+                if (outputs[ix]) pipeline.pipe(outputs[ix]);
                 
                 acc[path.resolve(cwd, x)] = pipeline;
                 return acc;
