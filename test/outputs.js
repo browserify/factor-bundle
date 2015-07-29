@@ -73,6 +73,32 @@ test('stream outputs', function (t) {
     }
 });
 
+test('function outputs', function (t) {
+    var tmpdir = tmp() + '/factor-bundle-' + Math.random();
+    mkdirp.sync(tmpdir);
+
+    t.plan(2);
+    var b = browserify(files);
+    b.plugin(factor, {
+        output: function() { return ' cat > ' + tmpdir + '/`basename $FILE`'; }
+    });
+    var w = fs.createWriteStream(path.join(tmpdir, 'common.js'));
+    b.bundle().pipe(w);
+    
+    w.on('finish', function () {
+        var common = fs.readFileSync(tmpdir + '/common.js', 'utf8');
+        var x = fs.readFileSync(tmpdir + '/x.js', 'utf8');
+        var y = fs.readFileSync(tmpdir + '/y.js', 'utf8');
+        
+        vm.runInNewContext(common + x, { console: { log: function (msg) {
+            t.equal(msg, 55500);
+        } } });
+        
+        vm.runInNewContext(common + y, { console: { log: function (msg) {
+            t.equal(msg, 333);
+        } } });
+    });
+});
 
 test('bundle twice', function (t) {
     var tmpdir = tmp() + '/factor-bundle-' + Math.random();

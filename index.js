@@ -29,13 +29,6 @@ module.exports = function f (b, opts) {
     
     var outopt = defined(opts.outputs, opts.output, opts.o);
      
-    function moreOutputs (file) {
-        if (isarray(outopt)) return [];
-        if (!outopt) return [];
-        var xopts = { env: xtend(process.env, { FILE: file }) };
-        return [ outpipe(outopt, xopts) ];
-    }
-    
     opts.objectMode = true;
     opts.raw = true;
     opts.rmap = {};
@@ -56,20 +49,27 @@ module.exports = function f (b, opts) {
             }
             next(null, row);
         }, function(next) {
-   if (outopt && !isarray(outopt) && ! typeof outputs === 'function') outopt = [outopt];
-            var outputs = defined(outopt, []);
+            var outopt = defined(opts.outputs, opts.output, opts.o);
 
-            if (typeof outputs === 'function') {
-                outputs = outputs();
-            } else if (!isarray(outputs) && isStream(outputs)) {
-                outputs = [ outputs ];
-            } else if (!isarray(outputs)) {
-                outputs = [];
-            } else {
-                outputs = outputs.map(function (o) {
+            if (typeof outopt === 'function') {
+                outopt = outopt();
+            }
+
+            var outputs;
+            if (isarray(outopt)) {
+                outputs = outopt.map(function (o) {
                     if (isStream(o)) return o;
-                    else return fs.createWriteStream(o);
+                    return fs.createWriteStream(o);
                 });
+            } else {
+                outputs = [];
+            }
+
+            function moreOutputs (file) {
+                if (isarray(outopt)) return [];
+                if (!outopt) return [];
+                var xopts = { env: xtend(process.env, { FILE: file }) };
+                return [ outpipe(outopt, xopts) ];
             }
 
             var pipelines = files.reduce(function (acc, x, ix) {
