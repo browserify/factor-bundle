@@ -39,7 +39,7 @@ module.exports = function f (b, opts) {
           hasExports: true
         });
 
-    b.on('reset', addHooks);
+    b.once('reset', addHooks);
     addHooks();
 
     function addHooks () {
