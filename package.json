@@ -6,7 +6,7 @@
   "bin": "bin/cmd.js",
   "dependencies": {
     "JSONStream": "~0.8.4",
-    "browser-pack": "^3.1.1",
+    "browser-pack": "^5.0.1",
     "defined": "0.0.0",
     "deps-topo-sort": "~0.2.1",
     "inherits": "^2.0.1",
@@ -21,13 +21,13 @@
     "xtend": "^4.0.0"
   },
   "devDependencies": {
-    "browser-unpack": "~0.2.0",
-    "browserify": "^5.11.0",
+    "browser-unpack": "^1.1.1",
+    "browserify": "^11.0.1",
     "concat-stream": "^1.4.6",
     "mkdirp": "~0.5.0",
-    "module-deps": "^2.1.0",
+    "module-deps": "^3.9.0",
     "osenv": "^0.1.0",
-    "tape": "^2.13.0",
+    "tape": "^4.0.1",
     "through": "^2.3.4"
   },
   "scripts": {
@@ -39,15 +39,15 @@
   },
   "homepage": "https://github.com/substack/factor-bundle",
   "keywords": [
+    "browser-pack",
     "browserify",
-    "browserify-tool",
     "browserify-plugin",
-    "bundle",
-    "browser-pack"
+    "browserify-tool",
+    "bundle"
   ],
   "author": {
-    "name": "James Halliday",
     "email": "mail@substack.net",
+    "name": "James Halliday",
     "url": "http://substack.net"
   },
   "license": "MIT"
