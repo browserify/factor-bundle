@@ -79,11 +79,14 @@ test('more complicated dependencies', function (t) {
         }));
         bundle.pipe(packs[name]);
     });
-    mdeps(files).pipe(fr)
+    var md = mdeps();
+    md.pipe(fr)
     fr.pipe(rowsOf(function (rows) {
         t.deepEqual(rows, expected.common);
     }));
     fr.pipe(packs.common);
+    files.forEach(function (file) { md.write({ file: file }) });
+    md.end();
 });
 
 test('same module included twice', function (t) {
@@ -143,11 +146,14 @@ test('same module included twice', function (t) {
         }));
         bundle.pipe(packs[name]);
     });
-    mdeps(files).pipe(fr)
+    var md = mdeps();
+    md.pipe(fr)
     fr.pipe(rowsOf(function (rows) {
         t.deepEqual(rows, expected.common);
     }));
     fr.pipe(packs.common);
+    files.forEach(function (file) { md.write({ file: file }) });
+    md.end();
 });
 
 test('threshold function reorganizes bundles', function (t) {
@@ -233,11 +239,14 @@ test('threshold function reorganizes bundles', function (t) {
         }));
         bundle.pipe(packs[name]);
     });
-    mdeps(files).pipe(fr)
+    var md = mdeps();
+    md.pipe(fr)
     fr.pipe(rowsOf(function (rows) {
         t.deepEqual(rows, expected.common);
     }));
     fr.pipe(packs.common);
+    files.forEach(function (file) { md.write({ file: file }) });
+    md.end();
 });
 
 test('if dependent is in common, so is dependee', function (t) {
@@ -301,11 +310,14 @@ test('if dependent is in common, so is dependee', function (t) {
         }));
         bundle.pipe(packs[name]);
     });
-    mdeps(files).pipe(fr)
+    var md = mdeps();
+    md.pipe(fr)
     fr.pipe(rowsOf(function (rows) {
         t.deepEqual(rows, expected.common);
     }));
     fr.pipe(packs.common);
+    files.forEach(function (file) { md.write({ file: file }) });
+    md.end();
 });
 
 function rowsOf (cb) {
@@ -326,6 +338,7 @@ function read (name, ref) {
     if (!ref) ref = {};
     var file = norm(name);
     ref.id = file;
+    ref.file = file;
     ref.source = fs.readFileSync(file, 'utf8');
     if (!ref.deps) ref.deps = {};
     return ref;

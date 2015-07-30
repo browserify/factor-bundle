@@ -76,11 +76,14 @@ test('trust but verify', function (t) {
         }));
         bundle.pipe(packs[name]);
     });
-    mdeps(files).pipe(fr)
+    var md = mdeps();
+    md.pipe(fr);
     fr.pipe(rowsOf(function (rows) {
         t.deepEqual(rows, expected.common);
     }));
     fr.pipe(packs.common);
+    files.forEach(function (file) { md.write({ file: file }) });
+    md.end();
 });
 
 function rowsOf (cb) {
@@ -95,6 +98,7 @@ function read (name, ref) {
     if (!ref) ref = {};
     var file = norm(name);
     ref.id = file;
+    ref.file = file;
     ref.source = fs.readFileSync(file, 'utf8');
     if (!ref.deps) ref.deps = {};
     return ref;
