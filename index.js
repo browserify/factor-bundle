@@ -9,7 +9,7 @@ var nub = require('nub');
 var depsTopoSort = require('deps-topo-sort');
 var reverse = require('reversepoint');
 var fs = require('fs');
-var pack = require('browser-pack');
+var bpack = require('browser-pack');
 var xtend = require('xtend');
 var defined = require('defined');
 var splicer = require('labeled-stream-splicer');
@@ -22,6 +22,7 @@ module.exports = function f (b, opts) {
         return createStream(b, opts)
     }
 
+    var pack = opts.pack || bpack;
     var files = [].concat(opts.entries).concat(opts.e)
         .concat(opts._).filter(Boolean);
 
