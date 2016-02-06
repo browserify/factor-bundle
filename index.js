@@ -15,6 +15,7 @@ var defined = require('defined');
 var splicer = require('labeled-stream-splicer');
 var outpipe = require('outpipe');
 var isarray = require('isarray');
+var mkdirp = require('mkdirp');
 
 module.exports = function f (b, opts) {
     if (!opts) opts = {};
@@ -59,6 +60,7 @@ module.exports = function f (b, opts) {
             if (isarray(outopt)) {
                 outputs = outopt.map(function (o) {
                     if (isStream(o)) return o;
+                    mkdirp.sync(path.dirname(o)); // ensure the containing directory exists
                     return fs.createWriteStream(o);
                 });
             } else {
