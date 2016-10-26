@@ -6,7 +6,7 @@
   "bin": "bin/cmd.js",
   "dependencies": {
     "JSONStream": "~0.8.4",
-    "browser-pack": "^5.0.1",
+    "browser-pack": "^6.0.1",
     "defined": "0.0.0",
     "deps-topo-sort": "~0.2.1",
     "inherits": "^2.0.1",
