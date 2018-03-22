@@ -72,11 +72,19 @@ module.exports = function f (b, opts) {
                 return [ outpipe(outopt, xopts) ];
             }
 
+            var ended = 0, numStreams = 0, endedcb;
+            function onpipelineend () {
+                ended++;
+                if (ended === numStreams && endedcb) endedcb();
+            }
             var pipelines = files.reduce(function (acc, x, ix) {
                 var pipeline = splicer.obj([
                     'pack', [ pack(packOpts) ],
                     'wrap', []
                 ]);
+
+                numStreams++;
+                pipeline.on('end', onpipelineend);
 
                 if (ix >= outputs.length) {
                     outputs.push.apply(outputs, moreOutputs(x));
@@ -99,6 +107,15 @@ module.exports = function f (b, opts) {
                 bundle.pipe(pipelines[bundle.file]);
             });
 
+            // Wait for all pipelines to drain before ending the main stream.
+            var wait = through.obj(function (row, enc, next) {
+                next(null, row);
+            }, function (done) {
+                if (ended === numStreams) done();
+                else endedcb = done;
+            });
+
+            b.pipeline.get('pack').unshift(wait);
             b.pipeline.get('pack').unshift(s);
 
             if (needRecords) files = [];
