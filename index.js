@@ -26,9 +26,9 @@ module.exports = function f (b, opts) {
         .concat(opts._).filter(Boolean);
 
     var needRecords = !files.length;
-    
+
     var outopt = defined(opts.outputs, opts.output, opts.o);
-     
+
     opts.objectMode = true;
     opts.raw = true;
     opts.rmap = {};
@@ -44,6 +44,7 @@ module.exports = function f (b, opts) {
 
     function addHooks () {
         b.pipeline.get('record').push(through.obj(function(row, enc, next) {
+            // record entrypoints
             if (row.file && needRecords) {
                 files.push(row.file);
             }
@@ -65,6 +66,7 @@ module.exports = function f (b, opts) {
                 outputs = [];
             }
 
+            // utility for creating output streams
             function moreOutputs (file) {
                 if (isarray(outopt)) return [];
                 if (!outopt) return [];
@@ -72,33 +74,43 @@ module.exports = function f (b, opts) {
                 return [ outpipe(outopt, xopts) ];
             }
 
-            var pipelines = files.reduce(function (acc, x, ix) {
+            // create a pipeline (labeled-stream-splicer) for every entry file
+            // with only a packer
+            var pipelines = files.reduce(function (acc, file, index) {
                 var pipeline = splicer.obj([
                     'pack', [ pack(packOpts) ],
                     'wrap', []
                 ]);
 
-                if (ix >= outputs.length) {
-                    outputs.push.apply(outputs, moreOutputs(x));
+                // if not enough specified outputs, possibly add additional outputs (?)
+                if (index >= outputs.length) {
+                    outputs.push.apply(outputs, moreOutputs(file));
                 }
-                if (outputs[ix]) pipeline.pipe(outputs[ix]);
-                
-                acc[path.resolve(cwd, x)] = pipeline;
+                // pipe to output if one exists
+                if (outputs[index]) pipeline.pipe(outputs[index]);
+
+                acc[path.resolve(cwd, file)] = pipeline;
                 return acc;
             }, {});
 
             // Force browser-pack to wrap the common bundle
             b._bpack.hasExports = true;
 
+            // for tests/debugging
             Object.keys(pipelines).forEach(function (id) {
                 b.emit('factor.pipeline', id, pipelines[id]);
             });
 
+            // create factor stream
             var s = createStream(files, opts);
+
+            // connect each factor groups module stream to bundle pipeline
             s.on('stream', function (bundle) {
+                // each group's output stream
                 bundle.pipe(pipelines[bundle.file]);
             });
 
+            // add factor stream before pack
             b.pipeline.get('pack').unshift(s);
 
             if (needRecords) files = [];
@@ -106,6 +118,7 @@ module.exports = function f (b, opts) {
             next();
         }));
 
+        // capture module's relative path. used for recovering entry point pathnames
         b.pipeline.get('label').push(through.obj(function(row, enc, next) {
             opts.rmap[row.id] = path.resolve(cwd, row.file);
             next(null, row);
@@ -118,10 +131,10 @@ module.exports = function f (b, opts) {
 
 function createStream (files, opts) {
     if (!opts) opts = {};
-    
+
     var fr = new Factor(files, opts);
     var parse, dup;
-    
+
     if (opts.objectMode) {
         dup = combine(depsTopoSort(), reverse(), fr);
     }
@@ -135,7 +148,7 @@ function createStream (files, opts) {
         ;
         parse.on('error', function (err) { dup.emit('error', err) });
     }
-    
+
     fr.on('error', function (err) { dup.emit('error', err) });
     fr.on('stream', function (s) {
         if (opts.raw) dup.emit('stream', s)
@@ -150,21 +163,21 @@ function Factor (files, opts) {
     var self = this;
     if (!(this instanceof Factor)) return new Factor(files, opts);
     Transform.call(this, { objectMode: true });
-    
+
     if (!opts) opts = {};
     this.basedir = defined(opts.basedir, process.cwd());
-    
+
     this._streams = {};
     this._groups = {};
     this._buffered = {};
-    
+
     this._ensureCommon = {};
     this._files = files.reduce(function (acc, file) {
         acc[path.resolve(self.basedir, file)] = true;
         return acc;
     }, {});
     this._rmap = opts.rmap || {};
-    
+
     this._thresholdVal = typeof opts.threshold === "number"
         ? opts.threshold : 1
     ;
@@ -200,9 +213,9 @@ Factor.prototype._transform = function (row, enc, next) {
             self._streams[id].push(row);
         });
     }
-    
+
     next();
-    
+
     function addGroups (gid) {
         Object.keys(row.deps || {}).forEach(function (key) {
             var file = row.deps[key];
@@ -215,7 +228,7 @@ Factor.prototype._transform = function (row, enc, next) {
 
 Factor.prototype._flush = function () {
     var self = this;
-    
+
     Object.keys(self._streams).forEach(function (key) {
         self._streams[key].push(null);
     });
