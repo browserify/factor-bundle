@@ -37,7 +37,7 @@ module.exports = function (n) { return n * 50 }
 Now run factor-bundle as a plugin (new in browserify 3.28.0):
 
 ``` sh
-browserify x.js y.js -p [ factor-bundle -o bundle/x.js -o bundle/y.js ] \
+browserify --no-dedupe x.js y.js -p [ factor-bundle -o bundle/x.js -o bundle/y.js ] \
   -o bundle/common.js
 ```
 
@@ -54,7 +54,7 @@ $ module-deps x.js y.js | factor-bundle \
 or factor out an existing bundle already compiled by browserify:
 
 ``` sh
-$ browserify x.js y.js > bundle.js
+$ browserify --no-dedupe x.js y.js > bundle.js
 $ browser-unpack < bundle.js | factor-bundle \
   x.js -o bundle/x.js \
   y.js -o bundle/y.js \
@@ -84,13 +84,18 @@ $ cat bundle/common.js bundle/y.js | node
 333
 ```
 
+## usage note
+
+You must disable browserify's dedupe feature in order to use this module.
+It can be disabled by providing `{ dedupe: false }` in the js api, or by the `--no-dedup` cli argument.
+
 ## command-line outpipe example
 
 We can pipe each output file through some other processes. Here we'll do
 minification with uglify compression with gzip:
 
 ``` sh
-browserify files/*.js \
+browserify --no-dedupe files/*.js \
     -p [ factor-bundle -o 'uglifyjs -cm | gzip > bundle/`basename $FILE`.gz' ] \
     | uglifyjs -cm | gzip > bundle/common.js.gz
 ```
@@ -104,7 +109,7 @@ var browserify = require('browserify');
 var fs = require('fs');
 
 var files = [ './files/x.js', './files/y.js' ];
-var b = browserify(files);
+var b = browserify(files, { dedupe: true });
 b.plugin('factor-bundle', { outputs: [ 'bundle/x.js', 'bundle/y.js' ] });
 b.bundle().pipe(fs.createWriteStream('bundle/common.js'));
 ```
@@ -116,7 +121,7 @@ var browserify = require('browserify');
 var concat = require('concat-stream');
 
 var files = [ './files/x.js', './files/y.js' ];
-var b = browserify(files);
+var b = browserify(files, { dedupe: true });
 
 b.plugin('factor-bundle', { outputs: [ write('x'), write('y') ] });
 b.bundle().pipe(write('common'));
@@ -141,7 +146,7 @@ where OPTIONS are:
   -o  Output FILE or CMD that maps to a corresponding entry file at the same
       index. CMDs are executed with $FILE set to the corresponding input file.
       Optionally specify a function that returns a valid value for this argument.
- 
+
   -e  Entry file to use, overriding the entry files listed in the original
       bundle.
 
@@ -159,10 +164,10 @@ the corresponding output file (-o).
 
     Write output to FILE or CMD. CMD is distinguished from FILE by the presence
     of one or more `>` or `|` characters. For example, use:
-    
+
       factor-bundle browser/a.js browser/b.js \
         -o bundle/a.js -o bundle/b.js
-    
+
     to write to a FILE. And do something like:
 
       factor-bundle browser/*.js \
@@ -203,10 +208,10 @@ this information is gathered from browserify itself.
 The files held in common among `> opts.threshold` (default: 1) bundles will be
 output on the `fr` stream itself. The entry-specific bundles are diverted into
 each `'stream'` event's output. `opts.threshold` can be a number or a function
-`opts.threshold(row, groups)` where `row` is a 
-[module-deps](https://github.com/substack/module-deps) object and `groups` is 
-an array of bundles which depend on the row. If the threshold function returns 
-`true`, that row and all its dependencies will go to the `common` bundle. If 
+`opts.threshold(row, groups)` where `row` is a
+[module-deps](https://github.com/substack/module-deps) object and `groups` is
+an array of bundles which depend on the row. If the threshold function returns
+`true`, that row and all its dependencies will go to the `common` bundle. If
 false, the row (but not its dependencies) will go to each bundle in `groups`.
 For example:
 
