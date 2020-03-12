@@ -2,6 +2,6 @@ var browserify = require('browserify');
 var fs = require('fs');
 
 var files = [ './files/x.js', './files/y.js' ];
-var b = browserify(files);
+var b = browserify(files, { dedupe: false });
 b.plugin('../', { o: [ 'bundle/x.js', 'bundle/y.js' ] });
 b.bundle().pipe(fs.createWriteStream('bundle/common.js'));
