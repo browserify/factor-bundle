@@ -14,7 +14,8 @@ var xtend = require('xtend');
 var defined = require('defined');
 var splicer = require('labeled-stream-splicer');
 var outpipe = require('outpipe');
-var isarray = require('isarray');
+
+var isarray = Array.isArray;
 
 module.exports = function f (b, opts) {
     if (!opts) opts = {};
